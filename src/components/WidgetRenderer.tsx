@@ -52,6 +52,34 @@ export function WidgetRenderer({ title, presetId, chartType, suffix }: Props) {
     return <MetricCard label={title} value={data.value} delta={data.delta} suffix={suffix} />;
   }
 
+  if (chartType === "table" && data.series) {
+    return (
+      <div className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
+        </div>
+        <div className="h-64 overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-surface-muted text-xs font-semibold text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 text-left">Item</th>
+                <th className="px-3 py-2 text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.series.map((r) => (
+                <tr key={r.name} className="border-t border-border-soft">
+                  <td className="px-3 py-2 text-foreground">{r.name}</td>
+                  <td className="px-3 py-2 text-right font-semibold">{r.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-[14px] border border-border bg-card p-5 shadow-card">
       <div className="mb-4 flex items-center justify-between">
