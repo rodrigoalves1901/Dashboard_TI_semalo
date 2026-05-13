@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  Link,
   Outlet,
   createRootRouteWithContext,
   HeadContent,
   Scripts,
+  useRouter,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
@@ -30,7 +32,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  notFoundComponent: NotFound,
+  errorComponent: RootError,
 });
+
+function NotFound() {
+  return (
+    <div style={{ padding: 32, fontFamily: "Inter, system-ui" }}>
+      <h1>404 — Página não encontrada</h1>
+      <Link to="/">Voltar ao início</Link>
+    </div>
+  );
+}
+
+function RootError({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  return (
+    <div style={{ padding: 32, fontFamily: "Inter, system-ui" }}>
+      <h1>Algo deu errado</h1>
+      <pre style={{ whiteSpace: "pre-wrap" }}>{error.message}</pre>
+      <button onClick={() => { router.invalidate(); reset(); }}>Tentar novamente</button>
+    </div>
+  );
+}
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
