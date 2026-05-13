@@ -9,38 +9,174 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
+import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
+import { Route as AuthenticatedAppConnectionsNewRouteImport } from './routes/_authenticated/app.connections.new'
+import { Route as AuthenticatedAppDashboardsIdEditRouteImport } from './routes/_authenticated/app.dashboards.$id.edit'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/app/settings',
+    path: '/app/settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppConnectionsRoute =
+  AuthenticatedAppConnectionsRouteImport.update({
+    id: '/app/connections',
+    path: '/app/connections',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppDashboardsIdRoute =
+  AuthenticatedAppDashboardsIdRouteImport.update({
+    id: '/app/dashboards/$id',
+    path: '/app/dashboards/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppConnectionsNewRoute =
+  AuthenticatedAppConnectionsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppConnectionsRoute,
+  } as any)
+const AuthenticatedAppDashboardsIdEditRoute =
+  AuthenticatedAppDashboardsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedAppDashboardsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
+  '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
+  '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
+  '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
+  '/_authenticated/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/_authenticated/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/app/connections'
+    | '/app/settings'
+    | '/app/'
+    | '/app/connections/new'
+    | '/app/dashboards/$id'
+    | '/app/dashboards/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/app/connections'
+    | '/app/settings'
+    | '/app'
+    | '/app/connections/new'
+    | '/app/dashboards/$id'
+    | '/app/dashboards/$id/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/signup'
+    | '/_authenticated/app/connections'
+    | '/_authenticated/app/settings'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/connections/new'
+    | '/_authenticated/app/dashboards/$id'
+    | '/_authenticated/app/dashboards/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +184,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
+      path: '/app/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/connections': {
+      id: '/_authenticated/app/connections'
+      path: '/app/connections'
+      fullPath: '/app/connections'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/dashboards/$id': {
+      id: '/_authenticated/app/dashboards/$id'
+      path: '/app/dashboards/$id'
+      fullPath: '/app/dashboards/$id'
+      preLoaderRoute: typeof AuthenticatedAppDashboardsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/connections/new': {
+      id: '/_authenticated/app/connections/new'
+      path: '/new'
+      fullPath: '/app/connections/new'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsNewRouteImport
+      parentRoute: typeof AuthenticatedAppConnectionsRoute
+    }
+    '/_authenticated/app/dashboards/$id/edit': {
+      id: '/_authenticated/app/dashboards/$id/edit'
+      path: '/edit'
+      fullPath: '/app/dashboards/$id/edit'
+      preLoaderRoute: typeof AuthenticatedAppDashboardsIdEditRouteImport
+      parentRoute: typeof AuthenticatedAppDashboardsIdRoute
+    }
   }
 }
 
+interface AuthenticatedAppConnectionsRouteChildren {
+  AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
+}
+
+const AuthenticatedAppConnectionsRouteChildren: AuthenticatedAppConnectionsRouteChildren =
+  {
+    AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
+  }
+
+const AuthenticatedAppConnectionsRouteWithChildren =
+  AuthenticatedAppConnectionsRoute._addFileChildren(
+    AuthenticatedAppConnectionsRouteChildren,
+  )
+
+interface AuthenticatedAppDashboardsIdRouteChildren {
+  AuthenticatedAppDashboardsIdEditRoute: typeof AuthenticatedAppDashboardsIdEditRoute
+}
+
+const AuthenticatedAppDashboardsIdRouteChildren: AuthenticatedAppDashboardsIdRouteChildren =
+  {
+    AuthenticatedAppDashboardsIdEditRoute:
+      AuthenticatedAppDashboardsIdEditRoute,
+  }
+
+const AuthenticatedAppDashboardsIdRouteWithChildren =
+  AuthenticatedAppDashboardsIdRoute._addFileChildren(
+    AuthenticatedAppDashboardsIdRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRouteWithChildren
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAppConnectionsRoute:
+    AuthenticatedAppConnectionsRouteWithChildren,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppDashboardsIdRoute:
+    AuthenticatedAppDashboardsIdRouteWithChildren,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
