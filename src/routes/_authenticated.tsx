@@ -1,18 +1,32 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { db } from "@/lib/storage";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: () => {
-    if (typeof window === "undefined") return;
-    const session = db.getSession();
-    if (!session) {
-      throw redirect({ to: "/login" });
-    }
-  },
-  component: () => (
+  component: AuthGate,
+});
+
+function AuthGate() {
+  const { user, ready } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (ready && !user) navigate({ to: "/login", replace: true });
+  }, [ready, user, navigate]);
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
+  }
+  if (!user) return null;
+
+  return (
     <AppShell>
       <Outlet />
     </AppShell>
-  ),
-});
+  );
+}
