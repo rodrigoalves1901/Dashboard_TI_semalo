@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { db } from "@/lib/storage";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
@@ -8,9 +8,10 @@ export const Route = createFileRoute("/")({
 
 function IndexRedirect() {
   const navigate = useNavigate();
+  const { user, ready } = useAuth();
   useEffect(() => {
-    const session = db.getSession();
-    navigate({ to: session ? "/app" : "/login", replace: true });
-  }, [navigate]);
+    if (!ready) return;
+    navigate({ to: user ? "/app" : "/login", replace: true });
+  }, [navigate, user, ready]);
   return null;
 }

@@ -83,6 +83,11 @@ function LoginPage() {
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            </div>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
