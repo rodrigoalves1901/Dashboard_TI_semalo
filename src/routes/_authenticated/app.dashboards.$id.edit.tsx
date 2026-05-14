@@ -12,7 +12,7 @@ import {
   type Dashboard,
   type Widget,
 } from "@/lib/data";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Save } from "lucide-react";
 import { WidgetGrid } from "@/components/WidgetGrid";
 import { WidgetForm } from "@/components/WidgetForm";
 import { toast } from "sonner";
