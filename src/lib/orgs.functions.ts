@@ -27,13 +27,5 @@ export const createOrgOnServer = createServerFn({ method: "POST" })
 
     if (orgError) throw new Error(orgError.message);
 
-    const { error: memberError } = await supabaseAdmin.from("org_members").insert({
-      org_id: org.id,
-      user_id: user.id,
-      role: "owner",
-    });
-
-    if (memberError && memberError.code !== "42P01") throw new Error(memberError.message);
-
     return org;
   });
