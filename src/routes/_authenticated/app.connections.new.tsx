@@ -15,9 +15,11 @@ const SYSTEM_DEFAULTS: Record<SystemType, { port: number; database: string }> = 
   mariadb: { port: 3306, database: "mariadb" },
   sqlserver: { port: 1433, database: "master" },
   sharepoint: { port: 443, database: "" },
+  demo: { port: 0, database: "demo" },
 };
 
 const SYSTEM_LABELS: Record<SystemType, string> = {
+  demo: "Demo (dados mockados)",
   mysql: "MySQL",
   mariadb: "MariaDB",
   sqlserver: "SQL Server",
@@ -29,10 +31,10 @@ function NewConnectionPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
-    systemType: "mysql" as SystemType,
+    systemType: "demo" as SystemType,
     host: "",
-    port: 3306,
-    database: "mysql",
+    port: 0,
+    database: "demo",
     username: "",
     password: "",
     ssl: false,
@@ -96,6 +98,7 @@ function NewConnectionPage() {
 
   const isSharepoint = form.systemType === "sharepoint";
   const isSqlServer = form.systemType === "sqlserver";
+  const isDemo = form.systemType === "demo";
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -143,7 +146,13 @@ function NewConnectionPage() {
           </select>
         </Field>
 
-        {isSharepoint ? (
+        {isDemo ? (
+          <div className="rounded-lg border border-dashed border-border-soft bg-surface-muted/40 p-4 text-sm text-muted-foreground">
+            <strong className="text-foreground">Modo Demo:</strong> nenhuma credencial é necessária.
+            Esta conexão alimenta os widgets com dados mockados (mesmos presets do GLPI), perfeito
+            para construir e validar dashboards enquanto o acesso real ao banco não está liberado.
+          </div>
+        ) : isSharepoint ? (
           <>
             <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
               <input
