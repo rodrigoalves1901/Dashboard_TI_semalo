@@ -16,6 +16,7 @@ type Props = {
   widgets: Widget[];
   editable: boolean;
   onLayoutChange?: (layouts: Record<string, LayoutItem>) => void;
+  onCommit?: (id: string, position: { x: number; y: number; w: number; h: number }) => void;
   onRemove?: (id: string) => void;
 };
 
@@ -28,7 +29,7 @@ function defaultPosition(w: Widget, i: number): LayoutItem {
   return { i: w.id, x: (i * 6) % 12, y: 100, w: 6, h: 4, minW: 3, minH: 3 };
 }
 
-export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Props) {
+export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemove }: Props) {
   const layout = useMemo<Layout>(
     () => widgets.map((w, i) => defaultPosition(w, i)),
     [widgets],
@@ -39,6 +40,12 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
     const map: Record<string, LayoutItem> = {};
     for (const l of current) map[l.i] = l;
     onLayoutChange(map);
+  };
+
+  // Fired only when the user releases the mouse — perfect moment to persist.
+  const commit = (_l: Layout, _old: LayoutItem | null, item: LayoutItem | null) => {
+    if (!item) return;
+    onCommit?.(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
   };
 
   if (widgets.length === 0) return null;
@@ -55,6 +62,8 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
       draggableHandle=".widget-drag-handle"
       compactType="vertical"
       onLayoutChange={handleChange}
+      onDragStop={commit}
+      onResizeStop={commit}
     >
       {widgets.map((w) => (
         <div
