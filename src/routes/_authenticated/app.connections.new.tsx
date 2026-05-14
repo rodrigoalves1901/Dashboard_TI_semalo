@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { db, uid, type Connection } from "@/lib/storage";
+import { createConnection } from "@/lib/data";
 import { ArrowLeft, Database } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +24,7 @@ function NewConnectionPage() {
   });
   const [testing, setTesting] = useState(false);
   const [tested, setTested] = useState<"ok" | "fail" | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -39,18 +40,19 @@ function NewConnectionPage() {
     );
   };
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!currentOrg) return;
-    const conn: Connection = {
-      id: uid(),
-      orgId: currentOrg.id,
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
-    db.saveConnections([...db.listConnections(), conn]);
-    toast.success("Conexão salva");
-    navigate({ to: "/app/connections" });
+    setSaving(true);
+    try {
+      await createConnection({ orgId: currentOrg.id, ...form });
+      toast.success("Conexão salva");
+      navigate({ to: "/app/connections" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -171,9 +173,10 @@ function NewConnectionPage() {
           <div className="flex-1" />
           <button
             type="submit"
-            className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            disabled={saving}
+            className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
           >
-            Salvar conexão
+            {saving ? "Salvando..." : "Salvar conexão"}
           </button>
         </div>
       </form>

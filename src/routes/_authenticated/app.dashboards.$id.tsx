@@ -1,9 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db, subscribe, type Dashboard, type Widget } from "@/lib/storage";
+import {
+  getDashboard,
+  listWidgets,
+  subscribe,
+  type Dashboard,
+  type Widget,
+} from "@/lib/data";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { WidgetRenderer } from "@/components/WidgetRenderer";
 import { getPreset, type PresetId } from "@/lib/glpi-presets";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/dashboards/$id")({
   component: DashboardView,
@@ -13,16 +20,33 @@ function DashboardView() {
   const { id } = Route.useParams();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const refresh = () => {
-      const d = db.listDashboards().find((x) => x.id === id) ?? null;
-      setDashboard(d);
-      setWidgets(db.listWidgets().filter((w) => w.dashboardId === id));
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const [d, ws] = await Promise.all([getDashboard(id), listWidgets(id)]);
+        if (cancelled) return;
+        setDashboard(d);
+        setWidgets(ws);
+      } catch (err) {
+        if (!cancelled) toast.error((err as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    refresh();
-    return subscribe(refresh);
+    void refresh();
+    const unsub = subscribe(() => void refresh());
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [id]);
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Carregando...</p>;
+  }
 
   if (!dashboard) {
     return (
@@ -35,7 +59,6 @@ function DashboardView() {
     );
   }
 
-  // Split metrics from charts for nicer layout
   const metrics = widgets.filter((w) => w.chartType === "metric");
   const charts = widgets.filter((w) => w.chartType !== "metric");
 

@@ -1,6 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { db, subscribe, uid, type Org } from "@/lib/storage";
+import {
+  listMyOrgs,
+  createOrg,
+  getCurrentOrgId,
+  setCurrentOrgId,
+  subscribe,
+  type Org,
+} from "@/lib/data";
 import type { Session, User as SbUser } from "@supabase/supabase-js";
 
 export type AuthUser = {
@@ -19,6 +26,7 @@ type AuthCtx = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   switchOrg: (orgId: string) => void;
+  refreshOrgs: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -38,34 +46,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentOrg, setCurrentOrg] = useState<Org | null>(null);
   const [ready, setReady] = useState(false);
 
-  const refreshOrgs = (uid_: string | null) => {
-    if (!uid_) {
+  const reloadOrgs = async (uid: string | null) => {
+    if (!uid) {
       setOrgs([]);
       setCurrentOrg(null);
       return;
     }
-    const myOrgIds = db.listMemberships().filter((m) => m.userId === uid_).map((m) => m.orgId);
-    const allOrgs = db.listOrgs().filter((o) => myOrgIds.includes(o.id));
-    setOrgs(allOrgs);
-    const currentId = db.getCurrentOrg();
-    const cur = allOrgs.find((o) => o.id === currentId) ?? allOrgs[0] ?? null;
-    setCurrentOrg(cur);
-    if (cur && cur.id !== currentId) db.setCurrentOrg(cur.id);
+    try {
+      const list = await listMyOrgs();
+      setOrgs(list);
+      const wanted = getCurrentOrgId();
+      const cur = list.find((o) => o.id === wanted) ?? list[0] ?? null;
+      setCurrentOrg(cur);
+      if (cur && cur.id !== wanted) setCurrentOrgId(cur.id);
+    } catch (err) {
+      console.error("Failed to load orgs", err);
+      setOrgs([]);
+      setCurrentOrg(null);
+    }
   };
 
-  const applySession = (session: Session | null) => {
+  const applySession = async (session: Session | null) => {
     const u = toAuthUser(session?.user ?? null);
     setUser(u);
-    refreshOrgs(u?.id ?? null);
+    await reloadOrgs(u?.id ?? null);
     setReady(true);
   };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
+      void applySession(session);
     });
-    supabase.auth.getSession().then(({ data }) => applySession(data.session));
-    const unsub = subscribe(() => refreshOrgs(user?.id ?? null));
+    supabase.auth.getSession().then(({ data }) => void applySession(data.session));
+    const unsub = subscribe(() => {
+      void reloadOrgs(user?.id ?? null);
+    });
     return () => {
       sub.subscription.unsubscribe();
       unsub();
@@ -88,19 +103,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw new Error(translateError(error.message));
-    const newUserId = data.user?.id;
-    if (newUserId) {
-      const newOrg: Org = { id: uid(), name: orgName, ownerId: newUserId };
-      db.saveOrgs([...db.listOrgs(), newOrg]);
-      db.saveMemberships([
-        ...db.listMemberships(),
-        { orgId: newOrg.id, userId: newUserId, role: "owner" },
-      ]);
-      db.setCurrentOrg(newOrg.id);
+    if (!data.session) {
+      // Email confirmation required — can't create org until confirmed.
+      return;
+    }
+    // Session active: create the org via Supabase (RLS allows owner_id = auth.uid()).
+    try {
+      const org = await createOrg(orgName);
+      setCurrentOrgId(org.id);
+      await reloadOrgs(data.user?.id ?? null);
+    } catch (err) {
+      console.error("Failed to create org on signup", err);
     }
   };
 
   const signOut = async () => {
+    setCurrentOrgId(null);
     await supabase.auth.signOut();
   };
 
@@ -113,13 +131,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const switchOrg = (orgId: string) => {
-    db.setCurrentOrg(orgId);
-    refreshOrgs(user?.id ?? null);
+    setCurrentOrgId(orgId);
+    const cur = orgs.find((o) => o.id === orgId) ?? null;
+    setCurrentOrg(cur);
+  };
+
+  const refreshOrgs = async () => {
+    await reloadOrgs(user?.id ?? null);
   };
 
   return (
     <Ctx.Provider
-      value={{ user, orgs, currentOrg, ready, signIn, signUp, signOut, resetPassword, switchOrg }}
+      value={{
+        user,
+        orgs,
+        currentOrg,
+        ready,
+        signIn,
+        signUp,
+        signOut,
+        resetPassword,
+        switchOrg,
+        refreshOrgs,
+      }}
     >
       {children}
     </Ctx.Provider>

@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db, subscribe, type Connection } from "@/lib/storage";
+import {
+  listConnections,
+  deleteConnection,
+  subscribe,
+  type Connection,
+} from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { Database, Plus, Trash2, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
@@ -12,27 +17,47 @@ export const Route = createFileRoute("/_authenticated/app/connections")({
 function ConnectionsPage() {
   const { currentOrg } = useAuth();
   const [conns, setConns] = useState<Connection[]>([]);
+  const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState<string | null>(null);
   const [status, setStatus] = useState<Record<string, "ok" | "fail">>({});
 
   useEffect(() => {
-    const refresh = () => {
-      if (!currentOrg) return;
-      setConns(db.listConnections().filter((c) => c.orgId === currentOrg.id));
+    let cancelled = false;
+    const refresh = async () => {
+      if (!currentOrg) {
+        setConns([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const list = await listConnections(currentOrg.id);
+        if (!cancelled) setConns(list);
+      } catch (err) {
+        if (!cancelled) toast.error((err as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    refresh();
-    return subscribe(refresh);
+    void refresh();
+    const unsub = subscribe(() => void refresh());
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [currentOrg]);
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Remover esta conexão?")) return;
-    db.saveConnections(db.listConnections().filter((c) => c.id !== id));
-    toast.success("Conexão removida");
+    try {
+      await deleteConnection(id);
+      toast.success("Conexão removida");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   const test = async (c: Connection) => {
     setTesting(c.id);
-    // Simulated test — real impl calls a TanStack server function with mysql2.
     await new Promise((r) => setTimeout(r, 900));
     const ok = c.host.length > 0 && c.port > 0;
     setStatus((s) => ({ ...s, [c.id]: ok ? "ok" : "fail" }));
@@ -57,7 +82,9 @@ function ConnectionsPage() {
         </Link>
       </header>
 
-      {conns.length === 0 ? (
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      ) : conns.length === 0 ? (
         <Link
           to="/app/connections/new"
           className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

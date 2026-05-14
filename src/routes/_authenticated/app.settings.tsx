@@ -51,9 +51,9 @@ function SettingsPage() {
       </section>
 
       <section className="rounded-[14px] border border-dashed border-border-soft p-6 text-sm text-muted-foreground">
-        <strong className="text-foreground">Próximos passos:</strong> conectar a um Supabase para
-        persistir usuários, organizações, conexões e dashboards entre dispositivos. Este MVP usa
-        armazenamento local do navegador.
+        <strong className="text-foreground">Conectado ao Supabase.</strong> Seus dados de usuário,
+        organização, conexões, dashboards e widgets agora persistem no banco e ficam acessíveis em
+        qualquer dispositivo.
       </section>
     </div>
   );

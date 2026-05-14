@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db, subscribe, uid, type Dashboard } from "@/lib/storage";
+import {
+  listDashboards,
+  createDashboard,
+  deleteDashboard,
+  subscribe,
+  type Dashboard,
+} from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { Plus, LayoutDashboard, MoreHorizontal, Trash2 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
@@ -20,36 +26,53 @@ export const Route = createFileRoute("/_authenticated/app/")({
 function DashboardsHome() {
   const { currentOrg, user } = useAuth();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const refresh = () => {
-      if (!currentOrg) return setDashboards([]);
-      setDashboards(db.listDashboards().filter((d) => d.orgId === currentOrg.id));
+    let cancelled = false;
+    const refresh = async () => {
+      if (!currentOrg) {
+        setDashboards([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const list = await listDashboards(currentOrg.id);
+        if (!cancelled) setDashboards(list);
+      } catch (err) {
+        if (!cancelled) toast.error((err as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    refresh();
-    return subscribe(refresh);
+    void refresh();
+    const unsub = subscribe(() => void refresh());
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [currentOrg]);
 
-  const create = () => {
+  const create = async () => {
     if (!currentOrg) return;
     const name = window.prompt("Nome do dashboard", "Novo dashboard");
     if (!name) return;
-    const d: Dashboard = {
-      id: uid(),
-      orgId: currentOrg.id,
-      name,
-      description: "",
-      createdAt: new Date().toISOString(),
-    };
-    db.saveDashboards([...db.listDashboards(), d]);
-    toast.success("Dashboard criado");
+    try {
+      await createDashboard(currentOrg.id, name);
+      toast.success("Dashboard criado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Remover este dashboard?")) return;
-    db.saveDashboards(db.listDashboards().filter((d) => d.id !== id));
-    db.saveWidgets(db.listWidgets().filter((w) => w.dashboardId !== id));
-    toast.success("Dashboard removido");
+    try {
+      await deleteDashboard(id);
+      toast.success("Dashboard removido");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   const opened = mockData("tickets_open");
@@ -92,7 +115,9 @@ function DashboardsHome() {
           <span className="text-xs text-muted-foreground">{dashboards.length} total</span>
         </div>
 
-        {dashboards.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        ) : dashboards.length === 0 ? (
           <button
             onClick={create}
             className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
