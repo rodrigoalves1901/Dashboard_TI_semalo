@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Responsive, WidthProvider, type Layout, type LayoutItem } from "react-grid-layout";
+import { Responsive, WidthProvider, type Layout, type LayoutItem } from "react-grid-layout/legacy";
 import { Trash2 } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
 import type { Widget } from "@/lib/data";
