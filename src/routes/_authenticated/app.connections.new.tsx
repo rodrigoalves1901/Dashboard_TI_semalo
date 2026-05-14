@@ -154,6 +154,7 @@ function NewConnectionPage() {
           </div>
         ) : isSharepoint ? (
           <>
+            <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
               <input
                 required
                 value={form.host}
