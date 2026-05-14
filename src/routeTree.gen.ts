@@ -17,7 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
-import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
+import { Route as AuthenticatedAppConnectionsIndexRouteImport } from './routes/_authenticated/app.connections.index'
 import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
 import { Route as AuthenticatedAppConnectionsNewRouteImport } from './routes/_authenticated/app.connections.new'
 import { Route as AuthenticatedAppDashboardsIdEditRouteImport } from './routes/_authenticated/app.dashboards.$id.edit'
@@ -62,10 +62,10 @@ const AuthenticatedAppSettingsRoute =
     path: '/app/settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAppConnectionsRoute =
-  AuthenticatedAppConnectionsRouteImport.update({
-    id: '/app/connections',
-    path: '/app/connections',
+const AuthenticatedAppConnectionsIndexRoute =
+  AuthenticatedAppConnectionsIndexRouteImport.update({
+    id: '/app/connections/',
+    path: '/app/connections/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppDashboardsIdRoute =
@@ -76,9 +76,9 @@ const AuthenticatedAppDashboardsIdRoute =
   } as any)
 const AuthenticatedAppConnectionsNewRoute =
   AuthenticatedAppConnectionsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedAppConnectionsRoute,
+    id: '/app/connections/new',
+    path: '/app/connections/new',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppDashboardsIdEditRoute =
   AuthenticatedAppDashboardsIdEditRouteImport.update({
@@ -93,11 +93,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -106,11 +106,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/connections': typeof AuthenticatedAppConnectionsIndexRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRoutesById {
@@ -121,11 +121,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/_authenticated/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/_authenticated/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
   '/_authenticated/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -136,11 +136,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
-    | '/app/connections'
     | '/app/settings'
     | '/app/'
     | '/app/connections/new'
     | '/app/dashboards/$id'
+    | '/app/connections/'
     | '/app/dashboards/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -149,11 +149,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
-    | '/app/connections'
     | '/app/settings'
     | '/app'
     | '/app/connections/new'
     | '/app/dashboards/$id'
+    | '/app/connections'
     | '/app/dashboards/$id/edit'
   id:
     | '__root__'
@@ -163,11 +163,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
-    | '/_authenticated/app/connections'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/connections/new'
     | '/_authenticated/app/dashboards/$id'
+    | '/_authenticated/app/connections/'
     | '/_authenticated/app/dashboards/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -238,11 +238,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/app/connections': {
-      id: '/_authenticated/app/connections'
+    '/_authenticated/app/connections/': {
+      id: '/_authenticated/app/connections/'
       path: '/app/connections'
-      fullPath: '/app/connections'
-      preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
+      fullPath: '/app/connections/'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/dashboards/$id': {
@@ -254,10 +254,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/app/connections/new': {
       id: '/_authenticated/app/connections/new'
-      path: '/new'
+      path: '/app/connections/new'
       fullPath: '/app/connections/new'
       preLoaderRoute: typeof AuthenticatedAppConnectionsNewRouteImport
-      parentRoute: typeof AuthenticatedAppConnectionsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/dashboards/$id/edit': {
       id: '/_authenticated/app/dashboards/$id/edit'
@@ -268,20 +268,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedAppConnectionsRouteChildren {
-  AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
-}
-
-const AuthenticatedAppConnectionsRouteChildren: AuthenticatedAppConnectionsRouteChildren =
-  {
-    AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
-  }
-
-const AuthenticatedAppConnectionsRouteWithChildren =
-  AuthenticatedAppConnectionsRoute._addFileChildren(
-    AuthenticatedAppConnectionsRouteChildren,
-  )
 
 interface AuthenticatedAppDashboardsIdRouteChildren {
   AuthenticatedAppDashboardsIdEditRoute: typeof AuthenticatedAppDashboardsIdEditRoute
@@ -299,19 +285,20 @@ const AuthenticatedAppDashboardsIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRouteWithChildren
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
   AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  AuthenticatedAppConnectionsIndexRoute: typeof AuthenticatedAppConnectionsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAppConnectionsRoute:
-    AuthenticatedAppConnectionsRouteWithChildren,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
   AuthenticatedAppDashboardsIdRoute:
     AuthenticatedAppDashboardsIdRouteWithChildren,
+  AuthenticatedAppConnectionsIndexRoute: AuthenticatedAppConnectionsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -329,3 +316,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

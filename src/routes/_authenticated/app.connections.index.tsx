@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Database, Plus, Trash2, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/app/connections")({
+export const Route = createFileRoute("/_authenticated/app/connections/")({
   component: ConnectionsPage,
 });
 
