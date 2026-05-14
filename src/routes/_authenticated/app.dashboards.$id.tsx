@@ -37,8 +37,6 @@ function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
-  if (hasChild) return <Outlet />;
-
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
@@ -65,6 +63,8 @@ function DashboardView() {
       unsub();
     };
   }, [id, currentOrg]);
+
+  if (hasChild) return <Outlet />;
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
