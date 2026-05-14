@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getDashboard,
   listWidgets,
@@ -12,7 +12,7 @@ import {
   type Dashboard,
   type Widget,
 } from "@/lib/data";
-import { ArrowLeft, Plus, Save } from "lucide-react";
+import { ArrowLeft, Plus, Save, Undo2 } from "lucide-react";
 import { WidgetGrid } from "@/components/WidgetGrid";
 import { WidgetForm } from "@/components/WidgetForm";
 import { toast } from "sonner";
@@ -32,6 +32,10 @@ function DashboardEditor() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
   const [saving, setSaving] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  // Snapshot of positions as they were on first load — used by "Desfazer".
+  const baselineRef = useRef<Record<string, { x: number; y: number; w: number; h: number }> | null>(null);
+  const [gridKey, setGridKey] = useState(0);
   const hasPending = Object.keys(pending).length > 0;
 
   useEffect(() => {
@@ -47,6 +51,11 @@ function DashboardEditor() {
         setDashboard(d);
         setWidgets(ws);
         setConns(cs);
+        if (!baselineRef.current) {
+          const snap: Record<string, { x: number; y: number; w: number; h: number }> = {};
+          for (const w of ws) if (w.position) snap[w.id] = { ...w.position };
+          baselineRef.current = snap;
+        }
       } catch (err) {
         if (!cancelled) toast.error((err as Error).message);
       } finally {
@@ -147,6 +156,30 @@ function DashboardEditor() {
     }
   };
 
+  const undoLayout = async () => {
+    const baseline = baselineRef.current;
+    if (!baseline) return;
+    if (!window.confirm("Restaurar o layout para a última posição salva ao abrir o editor?")) return;
+    setUndoing(true);
+    try {
+      await Promise.all(
+        widgets
+          .filter((w) => baseline[w.id])
+          .map((w) => updateWidgetPosition(w.id, baseline[w.id])),
+      );
+      setWidgets((prev) =>
+        prev.map((w) => (baseline[w.id] ? { ...w, position: { ...baseline[w.id] } } : w)),
+      );
+      setPending({});
+      setGridKey((k) => k + 1);
+      toast.success("Layout restaurado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setUndoing(false);
+    }
+  };
+
   const finish = async () => {
     if (hasPending) {
       const ok = window.confirm("Você tem alterações não salvas. Salvar antes de sair?");
@@ -174,6 +207,14 @@ function DashboardEditor() {
           {hasPending && (
             <span className="text-xs text-muted-foreground">Alterações não salvas</span>
           )}
+          <button
+            onClick={undoLayout}
+            disabled={undoing || !baselineRef.current}
+            title="Restaurar a última posição salva"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary disabled:opacity-40"
+          >
+            <Undo2 size={14} /> {undoing ? "Restaurando..." : "Desfazer"}
+          </button>
           <button
             onClick={saveLayout}
             disabled={!hasPending || saving}
@@ -206,7 +247,7 @@ function DashboardEditor() {
               Nenhum widget ainda. Use o painel ao lado para adicionar.
             </div>
           ) : (
-            <WidgetGrid widgets={widgets} editable onLayoutChange={onLayout} onCommit={onCommit} onRemove={removeWidget} />
+            <WidgetGrid key={gridKey} widgets={widgets} editable onLayoutChange={onLayout} onCommit={onCommit} onRemove={removeWidget} />
           )}
         </section>
       </div>
