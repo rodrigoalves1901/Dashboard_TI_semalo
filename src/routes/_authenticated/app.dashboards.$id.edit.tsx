@@ -156,6 +156,30 @@ function DashboardEditor() {
     }
   };
 
+  const undoLayout = async () => {
+    const baseline = baselineRef.current;
+    if (!baseline) return;
+    if (!window.confirm("Restaurar o layout para a última posição salva ao abrir o editor?")) return;
+    setUndoing(true);
+    try {
+      await Promise.all(
+        widgets
+          .filter((w) => baseline[w.id])
+          .map((w) => updateWidgetPosition(w.id, baseline[w.id])),
+      );
+      setWidgets((prev) =>
+        prev.map((w) => (baseline[w.id] ? { ...w, position: { ...baseline[w.id] } } : w)),
+      );
+      setPending({});
+      setGridKey((k) => k + 1);
+      toast.success("Layout restaurado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setUndoing(false);
+    }
+  };
+
   const finish = async () => {
     if (hasPending) {
       const ok = window.confirm("Você tem alterações não salvas. Salvar antes de sair?");
