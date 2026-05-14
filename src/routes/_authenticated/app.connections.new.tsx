@@ -146,8 +146,14 @@ function NewConnectionPage() {
           </select>
         </Field>
 
-        {isSharepoint ? (
-          <>
+        {isDemo ? (
+          <div className="rounded-lg border border-dashed border-border-soft bg-surface-muted/40 p-4 text-sm text-muted-foreground">
+            <strong className="text-foreground">Modo Demo:</strong> nenhuma credencial é necessária.
+            Esta conexão alimenta os widgets com dados mockados (mesmos presets do GLPI), perfeito
+            para construir e validar dashboards enquanto o acesso real ao banco não está liberado.
+          </div>
+        ) : isSharepoint ? (
+          <></>
             <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
               <input
                 required
