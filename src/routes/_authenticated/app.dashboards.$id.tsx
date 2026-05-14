@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   getDashboard,
@@ -29,11 +29,15 @@ export const Route = createFileRoute("/_authenticated/app/dashboards/$id")({
 function DashboardView() {
   const { id } = Route.useParams();
   const { currentOrg } = useAuth();
+  const childMatches = useChildMatches();
+  const hasChild = childMatches.length > 0;
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [conns, setConns] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+
+  if (hasChild) return <Outlet />;
 
   useEffect(() => {
     let cancelled = false;
