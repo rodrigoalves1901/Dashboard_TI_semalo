@@ -11,6 +11,7 @@ import {
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
+  Compass,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +29,7 @@ import {
 const nav = [
   { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true },
   { to: "/app/connections", label: "Conexões", icon: Database },
+  { to: "/app/explorer", label: "Explorer", icon: Compass },
   { to: "/app/settings", label: "Configurações", icon: Settings },
 ];
 
