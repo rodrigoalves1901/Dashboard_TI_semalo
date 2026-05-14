@@ -38,6 +38,8 @@ export type Dashboard = {
   createdAt: string;
 };
 
+export type WidgetPosition = { x: number; y: number; w: number; h: number };
+
 export type Widget = {
   id: string;
   dashboardId: string;
@@ -46,6 +48,7 @@ export type Widget = {
   chartType: ChartType;
   preset: string;
   refreshInterval: number;
+  position: WidgetPosition | null;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -242,6 +245,15 @@ export async function deleteWidget(id: string) {
   emit();
 }
 
+export async function updateWidgetPosition(id: string, position: WidgetPosition) {
+  const { error } = await supabase
+    .from("widgets")
+    .update({ position })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  // No emit — local state already optimistic.
+}
+
 function mapWidget(r: any): Widget {
   return {
     id: r.id,
@@ -251,6 +263,7 @@ function mapWidget(r: any): Widget {
     chartType: r.chart_type,
     preset: r.preset,
     refreshInterval: r.refresh_interval,
+    position: (r.position as WidgetPosition | null) ?? null,
   };
 }
 

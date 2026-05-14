@@ -3,13 +3,23 @@ import { useEffect, useState } from "react";
 import {
   getDashboard,
   listWidgets,
+  listConnections,
   subscribe,
+  type Connection,
   type Dashboard,
   type Widget,
 } from "@/lib/data";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
-import { WidgetRenderer } from "@/components/WidgetRenderer";
-import { getPreset, type PresetId } from "@/lib/glpi-presets";
+import { WidgetGrid } from "@/components/WidgetGrid";
+import { WidgetForm } from "@/components/WidgetForm";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/dashboards/$id")({
@@ -18,18 +28,26 @@ export const Route = createFileRoute("/_authenticated/app/dashboards/$id")({
 
 function DashboardView() {
   const { id } = Route.useParams();
+  const { currentOrg } = useAuth();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [conns, setConns] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
       try {
-        const [d, ws] = await Promise.all([getDashboard(id), listWidgets(id)]);
+        const [d, ws, cs] = await Promise.all([
+          getDashboard(id),
+          listWidgets(id),
+          currentOrg ? listConnections(currentOrg.id) : Promise.resolve([] as Connection[]),
+        ]);
         if (cancelled) return;
         setDashboard(d);
         setWidgets(ws);
+        setConns(cs);
       } catch (err) {
         if (!cancelled) toast.error((err as Error).message);
       } finally {
@@ -42,11 +60,9 @@ function DashboardView() {
       cancelled = true;
       unsub();
     };
-  }, [id]);
+  }, [id, currentOrg]);
 
-  if (loading) {
-    return <p className="text-sm text-muted-foreground">Carregando...</p>;
-  }
+  if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   if (!dashboard) {
     return (
@@ -58,9 +74,6 @@ function DashboardView() {
       </div>
     );
   }
-
-  const metrics = widgets.filter((w) => w.chartType === "metric");
-  const charts = widgets.filter((w) => w.chartType !== "metric");
 
   return (
     <div className="space-y-6">
@@ -75,58 +88,46 @@ function DashboardView() {
             <p className="mt-1 text-sm text-muted-foreground">{dashboard.description}</p>
           )}
         </div>
-        <Link
-          to="/app/dashboards/$id/edit"
-          params={{ id: dashboard.id }}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary"
-        >
-          <Pencil size={14} /> Editar dashboard
-        </Link>
+        <div className="flex gap-2">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                <Plus size={14} /> Adicionar widget
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Novo widget</DialogTitle>
+              </DialogHeader>
+              <WidgetForm
+                dashboardId={dashboard.id}
+                connections={conns}
+                onCreated={() => setOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+          <Link
+            to="/app/dashboards/$id/edit"
+            params={{ id: dashboard.id }}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary"
+          >
+            <Pencil size={14} /> Editar dashboard
+          </Link>
+        </div>
       </header>
 
       {widgets.length === 0 ? (
-        <Link
-          to="/app/dashboards/$id/edit"
-          params={{ id: dashboard.id }}
+        <button
+          onClick={() => setOpen(true)}
           className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <div className="flex flex-col items-center gap-2">
             <Plus size={20} />
             Adicionar primeiro widget
           </div>
-        </Link>
+        </button>
       ) : (
-        <>
-          {metrics.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
-              {metrics.map((w) => {
-                const preset = getPreset(w.preset);
-                return preset ? (
-                  <WidgetRenderer
-                    key={w.id}
-                    title={w.title}
-                    presetId={w.preset as PresetId}
-                    chartType={w.chartType}
-                    suffix={preset.id === "sla_compliance" ? "%" : undefined}
-                  />
-                ) : null;
-              })}
-            </div>
-          )}
-
-          {charts.length > 0 && (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {charts.map((w) => (
-                <WidgetRenderer
-                  key={w.id}
-                  title={w.title}
-                  presetId={w.preset as PresetId}
-                  chartType={w.chartType}
-                />
-              ))}
-            </div>
-          )}
-        </>
+        <WidgetGrid widgets={widgets} editable={false} />
       )}
     </div>
   );

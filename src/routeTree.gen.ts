@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppExplorerRouteImport } from './routes/_authenticated/app.explorer'
 import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
 import { Route as AuthenticatedAppConnectionsIndexRouteImport } from './routes/_authenticated/app.connections.index'
 import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
@@ -63,6 +64,12 @@ const AuthenticatedAppSettingsRoute =
     path: '/app/settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppExplorerRoute =
+  AuthenticatedAppExplorerRouteImport.update({
+    id: '/app/explorer',
+    path: '/app/explorer',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppConnectionsRoute =
   AuthenticatedAppConnectionsRouteImport.update({
     id: '/app/connections',
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
+  '/app/explorer': typeof AuthenticatedAppExplorerRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/app/explorer': typeof AuthenticatedAppExplorerRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
+  '/_authenticated/app/explorer': typeof AuthenticatedAppExplorerRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/app/connections'
+    | '/app/explorer'
     | '/app/settings'
     | '/app/'
     | '/app/connections/new'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/app/explorer'
     | '/app/settings'
     | '/app'
     | '/app/connections/new'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_authenticated/app/connections'
+    | '/_authenticated/app/explorer'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/connections/new'
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/explorer': {
+      id: '/_authenticated/app/explorer'
+      path: '/app/explorer'
+      fullPath: '/app/explorer'
+      preLoaderRoute: typeof AuthenticatedAppExplorerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/connections': {
       id: '/_authenticated/app/connections'
       path: '/app/connections'
@@ -321,6 +341,7 @@ const AuthenticatedAppDashboardsIdRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRouteWithChildren
+  AuthenticatedAppExplorerRoute: typeof AuthenticatedAppExplorerRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
@@ -329,6 +350,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppConnectionsRoute:
     AuthenticatedAppConnectionsRouteWithChildren,
+  AuthenticatedAppExplorerRoute: AuthenticatedAppExplorerRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppDashboardsIdRoute:
