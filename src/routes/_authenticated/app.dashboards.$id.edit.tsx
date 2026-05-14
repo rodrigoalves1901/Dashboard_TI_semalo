@@ -93,11 +93,27 @@ function DashboardEditor() {
   };
 
   const onLayout = (map: Record<string, { x: number; y: number; w: number; h: number }>) => {
-    // optimistic update only — persistence happens via "Salvar layout"
+    // Optimistic update only — autosave happens on drag/resize stop via onCommit.
     setWidgets((prev) =>
       prev.map((w) => (map[w.id] ? { ...w, position: { x: map[w.id].x, y: map[w.id].y, w: map[w.id].w, h: map[w.id].h } } : w)),
     );
-    setPending((prev) => ({ ...prev, ...map }));
+  };
+
+  const onCommit = async (
+    wid: string,
+    p: { x: number; y: number; w: number; h: number },
+  ) => {
+    setPending((prev) => ({ ...prev, [wid]: p }));
+    try {
+      await updateWidgetPosition(wid, p);
+      setPending((prev) => {
+        const { [wid]: _, ...rest } = prev;
+        return rest;
+      });
+      toast.success("Posição salva", { duration: 1200 });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   const saveLayout = async () => {
@@ -138,7 +154,7 @@ function DashboardEditor() {
             {dashboard.name}
           </button>
           <p className="mt-1 text-sm text-muted-foreground">
-            Editor — arraste e redimensione os widgets, depois clique em <b>Salvar layout</b>.
+            Editor — arraste e redimensione os widgets. As mudanças salvam automaticamente ao soltar.
           </p>
         </div>
         <div className="flex items-center gap-2">
