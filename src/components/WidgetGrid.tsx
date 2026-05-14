@@ -43,7 +43,8 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
   };
 
   // Fired only when the user releases the mouse — perfect moment to persist.
-  const commit = (_l: Layout, item: LayoutItem) => {
+  const commit = (_l: Layout, _old: LayoutItem | null, item: LayoutItem | null) => {
+    if (!item) return;
     onCommit?.(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
   };
 
