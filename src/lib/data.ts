@@ -253,3 +253,26 @@ function mapWidget(r: any): Widget {
     refreshInterval: r.refresh_interval,
   };
 }
+
+// ---------- App settings (singleton) ----------
+export async function getAppSettings(): Promise<{ systemName: string }> {
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("system_name")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return { systemName: (data?.system_name as string) ?? "DigitalDash" };
+}
+
+export async function updateAppSettings(systemName: string): Promise<void> {
+  const trimmed = systemName.trim();
+  if (!trimmed) throw new Error("Nome não pode ser vazio");
+  if (trimmed.length > 60) throw new Error("Nome muito longo (máx 60)");
+  const { error } = await supabase
+    .from("app_settings")
+    .update({ system_name: trimmed, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  emit();
+}
