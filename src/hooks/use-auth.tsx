@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listMyOrgs,
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [currentOrg, setCurrentOrg] = useState<Org | null>(null);
   const [ready, setReady] = useState(false);
+  const userIdRef = useRef<string | null>(null);
 
   const reloadOrgs = async (uid: string | null) => {
     if (!uid) {
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     const u = toAuthUser(validUser);
+    userIdRef.current = u?.id ?? null;
     setUser(u);
     await reloadOrgs(u?.id ?? null);
     setReady(true);
@@ -94,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     supabase.auth.getSession().then(({ data }) => void applySession(data.session));
     const unsub = subscribe(() => {
-      void reloadOrgs(user?.id ?? null);
+      void reloadOrgs(userIdRef.current);
     });
     return () => {
       sub.subscription.unsubscribe();
