@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import GridLayout, { WidthProvider, type Layout } from "react-grid-layout/legacy";
 import { Trash2, GripVertical } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
@@ -34,19 +34,11 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
     [widgets],
   );
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-  }, []);
-
   const handleChange = (current: Layout) => {
     if (!onLayoutChange) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const map: Record<string, LayoutItem> = {};
-      for (const l of current) map[l.i] = l;
-      onLayoutChange(map);
-    }, 400);
+    const map: Record<string, LayoutItem> = {};
+    for (const l of current) map[l.i] = l;
+    onLayoutChange(map);
   };
 
   if (widgets.length === 0) return null;
