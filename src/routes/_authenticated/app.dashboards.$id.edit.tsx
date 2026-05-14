@@ -100,17 +100,30 @@ function DashboardEditor() {
   };
 
   const onCommit = async (
-    wid: string,
-    p: { x: number; y: number; w: number; h: number },
+    positions: Record<string, { x: number; y: number; w: number; h: number }>,
   ) => {
-    setPending((prev) => ({ ...prev, [wid]: p }));
+    // Only persist widgets whose position actually changed.
+    const changed: Record<string, { x: number; y: number; w: number; h: number }> = {};
+    for (const w of widgets) {
+      const next = positions[w.id];
+      if (!next) continue;
+      const cur = w.position;
+      if (!cur || cur.x !== next.x || cur.y !== next.y || cur.w !== next.w || cur.h !== next.h) {
+        changed[w.id] = next;
+      }
+    }
+    if (Object.keys(changed).length === 0) return;
+    setPending((prev) => ({ ...prev, ...changed }));
     try {
-      await updateWidgetPosition(wid, p);
+      await Promise.all(
+        Object.entries(changed).map(([wid, p]) => updateWidgetPosition(wid, p)),
+      );
       setPending((prev) => {
-        const { [wid]: _, ...rest } = prev;
+        const rest = { ...prev };
+        for (const k of Object.keys(changed)) delete rest[k];
         return rest;
       });
-      toast.success("Posição salva", { duration: 1200 });
+      toast.success("Posições salvas", { duration: 1200 });
     } catch (err) {
       toast.error((err as Error).message);
     }

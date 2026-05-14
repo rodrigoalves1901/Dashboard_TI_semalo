@@ -12,11 +12,13 @@ const ResponsiveGrid = WidthProvider(GridLayout);
 
 type LayoutItem = Layout[number];
 
+type Pos = { x: number; y: number; w: number; h: number };
+
 type Props = {
   widgets: Widget[];
   editable: boolean;
   onLayoutChange?: (layouts: Record<string, LayoutItem>) => void;
-  onCommit?: (id: string, position: { x: number; y: number; w: number; h: number }) => void;
+  onCommit?: (positions: Record<string, Pos>) => void;
   onRemove?: (id: string) => void;
 };
 
@@ -42,10 +44,13 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
     onLayoutChange(map);
   };
 
-  // Fired only when the user releases the mouse — perfect moment to persist.
-  const commit = (_l: Layout, _old: LayoutItem | null, item: LayoutItem | null) => {
-    if (!item) return;
-    onCommit?.(item.i, { x: item.x, y: item.y, w: item.w, h: item.h });
+  // Fired only when the user releases the mouse — persist all positions
+  // because compactType="vertical" can shift neighbors too.
+  const commit = (current: Layout) => {
+    if (!onCommit) return;
+    const map: Record<string, Pos> = {};
+    for (const l of current) map[l.i] = { x: l.x, y: l.y, w: l.w, h: l.h };
+    onCommit(map);
   };
 
   if (widgets.length === 0) return null;
