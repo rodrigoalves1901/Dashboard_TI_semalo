@@ -62,6 +62,7 @@ function ConnectionsPage() {
     try {
       const res = await testConnectionOnServer({
         data: {
+          systemType: c.systemType,
           host: c.host,
           port: c.port,
           database: c.database,
@@ -71,7 +72,7 @@ function ConnectionsPage() {
         },
       });
       setStatus((s) => ({ ...s, [c.id]: res.ok ? "ok" : "fail" }));
-      if (res.ok) toast.success(`Conectado em ${res.latencyMs}ms · MySQL ${res.version}`);
+      if (res.ok) toast.success(`Conectado em ${res.latencyMs}ms · ${res.info}`);
       else toast.error(res.message);
     } catch (err) {
       setStatus((s) => ({ ...s, [c.id]: "fail" }));
