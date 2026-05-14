@@ -11,6 +11,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const { signUp } = useAuth();
+  const { systemName } = useAppSettings();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
@@ -37,7 +38,7 @@ function SignupPage() {
       <div className="w-full max-w-md rounded-[14px] border border-border bg-card p-8 shadow-card">
         <div className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">F</div>
-          <span className="text-lg font-bold">DigitalDash</span>
+          <span className="text-lg font-bold">{systemName}</span>
         </div>
         <h2 className="mt-6 text-2xl font-bold tracking-tight">Criar sua conta</h2>
         <p className="mt-1 text-sm text-muted-foreground">Comece a montar dashboards em minutos.</p>
