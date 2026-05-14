@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Building2, User as UserIcon } from "lucide-react";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import { Building2, Sparkles, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
@@ -8,6 +11,24 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 
 function SettingsPage() {
   const { user, currentOrg, orgs } = useAuth();
+  const { systemName, rename } = useAppSettings();
+  const [draft, setDraft] = useState(systemName);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setDraft(systemName), [systemName]);
+
+  const onSave = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await rename(draft);
+      toast.success("Nome do sistema atualizado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl space-y-6">
