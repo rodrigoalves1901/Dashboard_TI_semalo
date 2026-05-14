@@ -208,6 +208,14 @@ function DashboardEditor() {
             <span className="text-xs text-muted-foreground">Alterações não salvas</span>
           )}
           <button
+            onClick={undoLayout}
+            disabled={undoing || !baselineRef.current}
+            title="Restaurar a última posição salva"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary disabled:opacity-40"
+          >
+            <Undo2 size={14} /> {undoing ? "Restaurando..." : "Desfazer"}
+          </button>
+          <button
             onClick={saveLayout}
             disabled={!hasPending || saving}
             className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
