@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { mockData, type PresetId } from "@/lib/glpi-presets";
 import { MetricCard } from "./MetricCard";
-import type { ChartType } from "@/lib/storage";
+import type { ChartType } from "@/lib/data";
 
 const CHART_COLORS = [
   "var(--chart-1)",
