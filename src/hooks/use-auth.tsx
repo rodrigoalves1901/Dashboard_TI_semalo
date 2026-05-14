@@ -67,7 +67,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const applySession = async (session: Session | null) => {
-    const u = toAuthUser(session?.user ?? null);
+    let validUser: SbUser | null = session?.user ?? null;
+    if (validUser) {
+      // Valida o token contra o servidor — se o usuário foi deletado, limpa a sessão.
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          // ignore
+        }
+        validUser = null;
+      } else {
+        validUser = data.user;
+      }
+    }
+    const u = toAuthUser(validUser);
     setUser(u);
     await reloadOrgs(u?.id ?? null);
     setReady(true);
