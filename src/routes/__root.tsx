@@ -17,7 +17,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Flup — Dashboards multi-fonte" },
+      { title: "DigitalDash — Dashboards multi-fonte" },
       { name: "description", content: "Crie dashboards conectando-se a vários sistemas como GLPI, MySQL e mais." },
     ],
     links: [

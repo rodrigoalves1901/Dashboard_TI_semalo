@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/forgot-password")({
-  head: () => ({ meta: [{ title: "Recuperar senha — Flup" }] }),
+  head: () => ({ meta: [{ title: "Recuperar senha — DigitalDash" }] }),
   component: ForgotPasswordPage,
 });
 

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Redefinir senha — Flup" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha — DigitalDash" }] }),
   component: ResetPasswordPage,
 });
 
