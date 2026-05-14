@@ -1,14 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  db,
+  getDashboard,
+  listWidgets,
+  listConnections,
+  createWidget,
+  deleteWidget,
+  updateDashboard,
   subscribe,
-  uid,
   type Connection,
   type Dashboard,
   type Widget,
   type ChartType,
-} from "@/lib/storage";
+} from "@/lib/data";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { PRESETS, getPreset, type PresetId } from "@/lib/glpi-presets";
 import { WidgetRenderer } from "@/components/WidgetRenderer";
@@ -33,27 +37,40 @@ function DashboardEditor() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [conns, setConns] = useState<Connection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Builder form state
   const [title, setTitle] = useState("");
   const [presetId, setPresetId] = useState<PresetId>("tickets_open");
   const [chartType, setChartType] = useState<ChartType>("metric");
   const [connectionId, setConnectionId] = useState<string>("");
 
   useEffect(() => {
-    const refresh = () => {
-      const d = db.listDashboards().find((x) => x.id === id) ?? null;
-      setDashboard(d);
-      setWidgets(db.listWidgets().filter((w) => w.dashboardId === id));
-      if (currentOrg) {
-        setConns(db.listConnections().filter((c) => c.orgId === currentOrg.id));
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const [d, ws, cs] = await Promise.all([
+          getDashboard(id),
+          listWidgets(id),
+          currentOrg ? listConnections(currentOrg.id) : Promise.resolve([] as Connection[]),
+        ]);
+        if (cancelled) return;
+        setDashboard(d);
+        setWidgets(ws);
+        setConns(cs);
+      } catch (err) {
+        if (!cancelled) toast.error((err as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-    refresh();
-    return subscribe(refresh);
+    void refresh();
+    const unsub = subscribe(() => void refresh());
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [id, currentOrg]);
 
-  // When preset changes, default chart type
   useEffect(() => {
     const p = getPreset(presetId);
     if (p) {
@@ -62,6 +79,10 @@ function DashboardEditor() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presetId]);
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Carregando...</p>;
+  }
 
   if (!dashboard) {
     return (
@@ -74,31 +95,40 @@ function DashboardEditor() {
     );
   }
 
-  const addWidget = () => {
+  const addWidget = async () => {
     if (!title.trim()) return toast.error("Defina um título");
-    const w: Widget = {
-      id: uid(),
-      dashboardId: dashboard.id,
-      connectionId: connectionId || null,
-      title: title.trim(),
-      chartType,
-      preset: presetId,
-      refreshInterval: 60,
-    };
-    db.saveWidgets([...db.listWidgets(), w]);
-    toast.success("Widget adicionado");
-    setTitle("");
+    try {
+      await createWidget({
+        dashboardId: dashboard.id,
+        connectionId: connectionId || null,
+        title: title.trim(),
+        chartType,
+        preset: presetId,
+        refreshInterval: 60,
+      });
+      toast.success("Widget adicionado");
+      setTitle("");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
-  const removeWidget = (wid: string) => {
-    db.saveWidgets(db.listWidgets().filter((w) => w.id !== wid));
+  const removeWidget = async (wid: string) => {
+    try {
+      await deleteWidget(wid);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
-  const renameDashboard = () => {
+  const renameDashboard = async () => {
     const name = window.prompt("Nome do dashboard", dashboard.name);
     if (!name) return;
-    const updated = { ...dashboard, name };
-    db.saveDashboards(db.listDashboards().map((d) => (d.id === dashboard.id ? updated : d)));
+    try {
+      await updateDashboard(dashboard.id, { name });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   return (
@@ -123,7 +153,6 @@ function DashboardEditor() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        {/* Builder */}
         <aside className="rounded-[14px] border border-border bg-card p-5 shadow-card space-y-4 h-fit lg:sticky lg:top-20">
           <div className="flex items-center gap-2">
             <Plus size={16} className="text-primary" />
@@ -206,7 +235,6 @@ function DashboardEditor() {
           </button>
         </aside>
 
-        {/* Widgets list */}
         <section className="space-y-4">
           <h3 className="text-[15px] font-bold">Widgets ({widgets.length})</h3>
           {widgets.length === 0 ? (
