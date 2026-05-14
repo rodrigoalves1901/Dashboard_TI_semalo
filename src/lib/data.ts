@@ -9,11 +9,16 @@ export type Org = {
   createdAt: string;
 };
 
+export type SystemType = "mysql" | "mariadb" | "sqlserver" | "sharepoint";
+
 export type Connection = {
   id: string;
   orgId: string;
   name: string;
-  systemType: "glpi";
+  systemType: SystemType;
+  // For DBs (mysql/mariadb/sqlserver): host/port/database/username/password
+  // For SharePoint: host=tenantId, database=siteUrl (e.g. contoso.sharepoint.com:/sites/Marketing),
+  //                 username=clientId, password=clientSecret, port=443
   host: string;
   port: number;
   database: string;
