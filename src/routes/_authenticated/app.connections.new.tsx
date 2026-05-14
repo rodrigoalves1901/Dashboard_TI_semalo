@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { createConnection } from "@/lib/data";
+import { createConnection, type SystemType } from "@/lib/data";
 import { testConnectionOnServer } from "@/lib/connections.functions";
 import { ArrowLeft, Database } from "lucide-react";
 import { toast } from "sonner";
@@ -10,15 +10,29 @@ export const Route = createFileRoute("/_authenticated/app/connections/new")({
   component: NewConnectionPage,
 });
 
+const SYSTEM_DEFAULTS: Record<SystemType, { port: number; database: string }> = {
+  mysql: { port: 3306, database: "mysql" },
+  mariadb: { port: 3306, database: "mariadb" },
+  sqlserver: { port: 1433, database: "master" },
+  sharepoint: { port: 443, database: "" },
+};
+
+const SYSTEM_LABELS: Record<SystemType, string> = {
+  mysql: "MySQL",
+  mariadb: "MariaDB",
+  sqlserver: "SQL Server",
+  sharepoint: "SharePoint (Microsoft Graph)",
+};
+
 function NewConnectionPage() {
   const { currentOrg } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
-    systemType: "glpi" as const,
+    systemType: "mysql" as SystemType,
     host: "",
     port: 3306,
-    database: "glpi",
+    database: "mysql",
     username: "",
     password: "",
     ssl: false,
@@ -30,11 +44,18 @@ function NewConnectionPage() {
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const changeSystem = (sys: SystemType) => {
+    const d = SYSTEM_DEFAULTS[sys];
+    setForm((f) => ({ ...f, systemType: sys, port: d.port, database: f.database || d.database }));
+    setTested(null);
+  };
+
   const test = async () => {
     setTesting(true);
     try {
       const res = await testConnectionOnServer({
         data: {
+          systemType: form.systemType,
           host: form.host,
           port: form.port,
           database: form.database,
@@ -45,7 +66,7 @@ function NewConnectionPage() {
       });
       if (res.ok) {
         setTested("ok");
-        toast.success(`Conectado em ${res.latencyMs}ms · MySQL ${res.version}`);
+        toast.success(`Conectado em ${res.latencyMs}ms · ${res.info}`);
       } else {
         setTested("fail");
         toast.error(res.message);
@@ -73,6 +94,9 @@ function NewConnectionPage() {
     }
   };
 
+  const isSharepoint = form.systemType === "sharepoint";
+  const isSqlServer = form.systemType === "sqlserver";
+
   return (
     <div className="max-w-3xl space-y-6">
       <Link
@@ -89,7 +113,7 @@ function NewConnectionPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Nova conexão</h1>
           <p className="text-sm text-muted-foreground">
-            Configure o acesso ao banco de dados do seu sistema.
+            Configure o acesso ao seu sistema (banco de dados ou API).
           </p>
         </div>
       </header>
@@ -101,81 +125,129 @@ function NewConnectionPage() {
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
             className="input"
-            placeholder="GLPI Produção"
+            placeholder="Minha conexão"
           />
         </Field>
 
-        <Field label="Sistema">
+        <Field label="Tipo de sistema">
           <select
             value={form.systemType}
-            onChange={(e) => update("systemType", e.target.value as "glpi")}
+            onChange={(e) => changeSystem(e.target.value as SystemType)}
             className="input"
           >
-            <option value="glpi">GLPI (MySQL/MariaDB)</option>
+            {(Object.keys(SYSTEM_LABELS) as SystemType[]).map((s) => (
+              <option key={s} value={s}>
+                {SYSTEM_LABELS[s]}
+              </option>
+            ))}
           </select>
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="sm:col-span-2">
-            <Field label="Host (IP ou domínio)">
+        {isSharepoint ? (
+          <>
+            <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
               <input
                 required
                 value={form.host}
                 onChange={(e) => update("host", e.target.value)}
-                placeholder="192.168.1.50"
+                placeholder="00000000-0000-0000-0000-000000000000"
                 className="input font-mono"
               />
             </Field>
-          </div>
-          <Field label="Porta">
-            <input
-              required
-              type="number"
-              value={form.port}
-              onChange={(e) => update("port", Number(e.target.value))}
-              className="input font-mono"
-            />
-          </Field>
-        </div>
+            <Field label="Site URL" hint="Ex: contoso.sharepoint.com:/sites/Marketing">
+              <input
+                required
+                value={form.database}
+                onChange={(e) => update("database", e.target.value)}
+                placeholder="contoso.sharepoint.com:/sites/Marketing"
+                className="input font-mono"
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Client ID (Application ID)">
+                <input
+                  required
+                  value={form.username}
+                  onChange={(e) => update("username", e.target.value)}
+                  className="input font-mono"
+                />
+              </Field>
+              <Field label="Client Secret">
+                <input
+                  required
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  className="input"
+                />
+              </Field>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <Field label="Host (IP ou domínio)">
+                  <input
+                    required
+                    value={form.host}
+                    onChange={(e) => update("host", e.target.value)}
+                    placeholder="192.168.1.50"
+                    className="input font-mono"
+                  />
+                </Field>
+              </div>
+              <Field label="Porta">
+                <input
+                  required
+                  type="number"
+                  value={form.port}
+                  onChange={(e) => update("port", Number(e.target.value))}
+                  className="input font-mono"
+                />
+              </Field>
+            </div>
 
-        <Field label="Nome do banco">
-          <input
-            required
-            value={form.database}
-            onChange={(e) => update("database", e.target.value)}
-            className="input font-mono"
-          />
-        </Field>
+            <Field label="Nome do banco">
+              <input
+                required
+                value={form.database}
+                onChange={(e) => update("database", e.target.value)}
+                className="input font-mono"
+              />
+            </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Usuário">
-            <input
-              required
-              value={form.username}
-              onChange={(e) => update("username", e.target.value)}
-              className="input"
-            />
-          </Field>
-          <Field label="Senha">
-            <input
-              required
-              type="password"
-              value={form.password}
-              onChange={(e) => update("password", e.target.value)}
-              className="input"
-            />
-          </Field>
-        </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Usuário">
+                <input
+                  required
+                  value={form.username}
+                  onChange={(e) => update("username", e.target.value)}
+                  className="input"
+                />
+              </Field>
+              <Field label="Senha">
+                <input
+                  required
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  className="input"
+                />
+              </Field>
+            </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.ssl}
-            onChange={(e) => update("ssl", e.target.checked)}
-            className="h-4 w-4 rounded border-border accent-[var(--primary)]"
-          />
-          Usar conexão SSL/TLS
-        </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.ssl}
+                onChange={(e) => update("ssl", e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-[var(--primary)]"
+              />
+              {isSqlServer ? "Criptografar conexão (encrypt)" : "Usar conexão SSL/TLS"}
+            </label>
+          </>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
           <button
