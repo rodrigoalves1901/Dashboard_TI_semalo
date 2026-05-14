@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const { signIn } = useAuth();
+  const { systemName } = useAppSettings();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +36,7 @@ function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between bg-card border-r border-border p-10">
         <div className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">F</div>
-          <span className="text-lg font-bold">DigitalDash</span>
+          <span className="text-lg font-bold">{systemName}</span>
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -45,14 +47,14 @@ function LoginPage() {
             Conexão segura por IP e porta, configurada em minutos.
           </p>
         </div>
-        <div className="text-xs text-muted-foreground">© DigitalDash</div>
+        <div className="text-xs text-muted-foreground">© {systemName}</div>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-10">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8 flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><LayoutDashboard size={16} /></div>
-            <span className="text-lg font-bold">DigitalDash</span>
+            <span className="text-lg font-bold">{systemName}</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight">Bem-vindo de volta</h2>
           <p className="mt-1 text-sm text-muted-foreground">Acesse seus dashboards.</p>

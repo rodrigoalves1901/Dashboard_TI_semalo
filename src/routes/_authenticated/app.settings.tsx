@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Building2, User as UserIcon } from "lucide-react";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import { Building2, Sparkles, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
@@ -8,6 +11,24 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 
 function SettingsPage() {
   const { user, currentOrg, orgs } = useAuth();
+  const { systemName, rename } = useAppSettings();
+  const [draft, setDraft] = useState(systemName);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setDraft(systemName), [systemName]);
+
+  const onSave = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await rename(draft);
+      toast.success("Nome do sistema atualizado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -17,6 +38,42 @@ function SettingsPage() {
           Gerencie sua conta e organização.
         </p>
       </header>
+
+      <section className="rounded-[14px] border border-border bg-card p-6 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <h2 className="text-[15px] font-bold">Identidade do sistema</h2>
+            <p className="text-xs text-muted-foreground">
+              Esse nome aparece em todas as páginas e na aba do navegador. Persiste no banco.
+            </p>
+          </div>
+        </div>
+        <form onSubmit={onSave} className="mt-5 flex flex-wrap items-end gap-3">
+          <label className="block flex-1 min-w-[220px]">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Nome do sistema
+            </span>
+            <input
+              required
+              maxLength={60}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
+              placeholder="DigitalDash"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={saving || draft.trim() === systemName.trim() || !draft.trim()}
+            className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Salvar"}
+          </button>
+        </form>
+      </section>
 
       <section className="rounded-[14px] border border-border bg-card p-6 shadow-card">
         <div className="flex items-center gap-3">
