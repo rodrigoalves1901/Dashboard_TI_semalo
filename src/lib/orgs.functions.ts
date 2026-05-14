@@ -10,7 +10,9 @@ const CreateOrgInput = z.object({
 export const createOrgOnServer = createServerFn({ method: "POST" })
   .inputValidator((input) => CreateOrgInput.parse(input))
   .handler(async ({ data }) => {
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(data.accessToken);
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(
+      data.accessToken,
+    );
     const user = userData.user;
 
     if (userError || !user) {
@@ -25,11 +27,13 @@ export const createOrgOnServer = createServerFn({ method: "POST" })
 
     if (orgError) throw new Error(orgError.message);
 
-    await supabaseAdmin.from("org_members").insert({
+    const { error: memberError } = await supabaseAdmin.from("org_members").insert({
       org_id: org.id,
       user_id: user.id,
       role: "owner",
     });
+
+    if (memberError && memberError.code !== "42P01") throw new Error(memberError.message);
 
     return org;
   });
