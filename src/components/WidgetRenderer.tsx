@@ -43,18 +43,22 @@ type Props = {
   presetId: PresetId;
   chartType: ChartType;
   suffix?: string;
+  bare?: boolean;
 };
 
-export function WidgetRenderer({ title, presetId, chartType, suffix }: Props) {
+export function WidgetRenderer({ title, presetId, chartType, suffix, bare }: Props) {
   const data = useMemo(() => mockData(presetId), [presetId]);
+  const shellClass = bare
+    ? "h-full p-5"
+    : "rounded-[14px] border border-border bg-card p-5 shadow-card";
 
   if (chartType === "metric" && data.value !== undefined) {
-    return <MetricCard label={title} value={data.value} delta={data.delta} suffix={suffix} />;
+    return <MetricCard label={title} value={data.value} delta={data.delta} suffix={suffix} bare={bare} />;
   }
 
   if (chartType === "table" && data.series) {
     return (
-      <div className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+      <div className={shellClass}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
         </div>
@@ -81,11 +85,11 @@ export function WidgetRenderer({ title, presetId, chartType, suffix }: Props) {
   }
 
   return (
-    <div className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+    <div className={shellClass}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
       </div>
-      <div className="h-64">
+      <div className={bare ? "h-[calc(100%-2.5rem)]" : "h-64"}>
         <ResponsiveContainer width="100%" height="100%">
           {chartType === "bar" && data.series ? (
             <BarChart data={data.series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>

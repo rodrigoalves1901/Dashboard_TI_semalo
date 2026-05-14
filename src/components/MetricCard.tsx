@@ -6,12 +6,18 @@ type Props = {
   value: string | number;
   delta?: number;
   suffix?: string;
+  bare?: boolean;
 };
 
-export function MetricCard({ label, value, delta, suffix }: Props) {
+export function MetricCard({ label, value, delta, suffix, bare }: Props) {
   const positive = (delta ?? 0) >= 0;
   return (
-    <div className="rounded-[14px] border border-border bg-card p-4 shadow-card">
+    <div
+      className={cn(
+        "h-full p-4",
+        bare ? "" : "rounded-[14px] border border-border bg-card shadow-card",
+      )}
+    >
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
       <div className="mt-2 flex items-baseline gap-1">
         <div className="text-[22px] font-bold leading-7 text-foreground">{value}</div>
