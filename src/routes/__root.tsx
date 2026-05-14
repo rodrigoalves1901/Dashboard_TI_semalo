@@ -10,7 +10,6 @@ import {
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
-import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -18,13 +17,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DigitalDash" },
+      { title: "DigitalDash — Dashboards multi-fonte" },
       { name: "description", content: "Crie dashboards conectando-se a vários sistemas como GLPI, MySQL e mais." },
+      { property: "og:title", content: "DigitalDash — Dashboards multi-fonte" },
+      { name: "twitter:title", content: "DigitalDash — Dashboards multi-fonte" },
+      { property: "og:description", content: "Crie dashboards conectando-se a vários sistemas como GLPI, MySQL e mais." },
+      { name: "twitter:description", content: "Crie dashboards conectando-se a vários sistemas como GLPI, MySQL e mais." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7fb5c940-5ace-437b-8442-fa2b2aac8275/id-preview-7ba76409--7eed1424-4cad-4e85-9548-c3d3c9537e11.lovable.app-1778756791064.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7fb5c940-5ace-437b-8442-fa2b2aac8275/id-preview-7ba76409--7eed1424-4cad-4e85-9548-c3d3c9537e11.lovable.app-1778756791064.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -77,12 +82,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AppSettingsProvider>
-        <AuthProvider>
-          <Outlet />
-          <Toaster />
-        </AuthProvider>
-      </AppSettingsProvider>
+      <AuthProvider>
+        <Outlet />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
