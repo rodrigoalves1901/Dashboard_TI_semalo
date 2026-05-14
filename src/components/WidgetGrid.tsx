@@ -96,6 +96,7 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
               presetId={w.preset as PresetId}
               chartType={w.chartType}
               suffix={w.preset === "sla_compliance" ? "%" : undefined}
+              bare
             />
           </div>
         </div>
