@@ -193,7 +193,7 @@ function DashboardEditor() {
               Nenhum widget ainda. Use o painel ao lado para adicionar.
             </div>
           ) : (
-            <WidgetGrid widgets={widgets} editable onLayoutChange={onLayout} onRemove={removeWidget} />
+            <WidgetGrid widgets={widgets} editable onLayoutChange={onLayout} onCommit={onCommit} onRemove={removeWidget} />
           )}
         </section>
       </div>
