@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Responsive, WidthProvider, type Layout, type LayoutItem } from "react-grid-layout/legacy";
-import { Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
+import GridLayout, { WidthProvider, type Layout } from "react-grid-layout/legacy";
+import { Trash2, GripVertical } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
 import type { Widget } from "@/lib/data";
 import type { PresetId } from "@/lib/glpi-presets";
 
 import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+const ResponsiveGrid = WidthProvider(GridLayout);
+
+type LayoutItem = Layout[number];
 
 type Props = {
   widgets: Widget[];
@@ -16,15 +19,13 @@ type Props = {
   onRemove?: (id: string) => void;
 };
 
-const COLS = { lg: 12, md: 8, sm: 4, xs: 2, xxs: 2 };
-const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 };
+const COLS = 12;
 
 function defaultPosition(w: Widget, i: number): LayoutItem {
-  const base = { i: w.id, minW: 2, minH: 2 };
-  if (w.position) return { ...base, ...w.position };
-  if (w.chartType === "metric") return { ...base, x: (i * 3) % 12, y: 0, w: 3, h: 2 };
-  if (w.chartType === "table") return { ...base, x: 0, y: i * 4, w: 12, h: 4 };
-  return { ...base, x: (i * 6) % 12, y: 100, w: 6, h: 4 };
+  if (w.position) return { i: w.id, ...w.position, minW: 2, minH: 2 };
+  if (w.chartType === "metric") return { i: w.id, x: (i * 3) % 12, y: 0, w: 3, h: 2, minW: 2, minH: 2 };
+  if (w.chartType === "table") return { i: w.id, x: 0, y: i * 4, w: 12, h: 5, minW: 3, minH: 3 };
+  return { i: w.id, x: (i * 6) % 12, y: 100, w: 6, h: 4, minW: 3, minH: 3 };
 }
 
 export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Props) {
@@ -34,7 +35,6 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
   );
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [, force] = useState(0);
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
@@ -46,35 +46,44 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
       const map: Record<string, LayoutItem> = {};
       for (const l of current) map[l.i] = l;
       onLayoutChange(map);
-      force((n) => n + 1);
     }, 400);
   };
 
   if (widgets.length === 0) return null;
 
   return (
-    <ResponsiveGridLayout
+    <ResponsiveGrid
       className="layout"
-      layouts={{ lg: layout, md: layout, sm: layout }}
+      layout={layout}
       cols={COLS}
-      breakpoints={BREAKPOINTS}
       rowHeight={80}
       margin={[16, 16]}
       isDraggable={editable}
       isResizable={editable}
-      draggableCancel=".no-drag"
+      draggableHandle=".widget-drag-handle"
+      compactType="vertical"
       onLayoutChange={handleChange}
     >
       {widgets.map((w) => (
-        <div key={w.id} className="relative">
-          {editable && onRemove && (
-            <button
-              onClick={() => onRemove(w.id)}
-              aria-label="Remover widget"
-              className="no-drag absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-md bg-card/80 text-destructive shadow-sm hover:bg-destructive/10"
-            >
-              <Trash2 size={13} />
-            </button>
+        <div key={w.id} className="group relative overflow-hidden rounded-[14px]">
+          {editable && (
+            <>
+              <div
+                className="widget-drag-handle absolute left-0 right-0 top-0 z-10 flex h-7 cursor-move items-center justify-center bg-card/90 opacity-0 transition-opacity group-hover:opacity-100"
+                title="Arrastar"
+              >
+                <GripVertical size={14} className="text-muted-foreground" />
+              </div>
+              {onRemove && (
+                <button
+                  onClick={() => onRemove(w.id)}
+                  aria-label="Remover widget"
+                  className="absolute right-2 top-2 z-20 grid h-7 w-7 place-items-center rounded-md bg-card text-destructive shadow-sm hover:bg-destructive/10"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </>
           )}
           <div className="h-full w-full overflow-hidden">
             <WidgetRenderer
@@ -86,6 +95,6 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
           </div>
         </div>
       ))}
-    </ResponsiveGridLayout>
+    </ResponsiveGrid>
   );
 }
