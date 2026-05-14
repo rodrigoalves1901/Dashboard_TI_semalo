@@ -65,27 +65,31 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onRemove }: Prop
       onLayoutChange={handleChange}
     >
       {widgets.map((w) => (
-        <div key={w.id} className="group relative overflow-hidden rounded-[14px]">
+        <div
+          key={w.id}
+          className={`relative overflow-hidden rounded-[14px] border border-border bg-card ${editable ? "ring-2 ring-primary/30" : ""}`}
+        >
           {editable && (
             <>
               <div
-                className="widget-drag-handle absolute left-0 right-0 top-0 z-10 flex h-7 cursor-move items-center justify-center bg-card/90 opacity-0 transition-opacity group-hover:opacity-100"
-                title="Arrastar"
+                className="widget-drag-handle absolute left-0 right-0 top-0 z-10 flex h-8 cursor-move items-center justify-center gap-1 border-b border-border bg-secondary/80 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                title="Arraste para mover"
               >
-                <GripVertical size={14} className="text-muted-foreground" />
+                <GripVertical size={14} />
+                <span>arraste</span>
               </div>
               {onRemove && (
                 <button
                   onClick={() => onRemove(w.id)}
                   aria-label="Remover widget"
-                  className="absolute right-2 top-2 z-20 grid h-7 w-7 place-items-center rounded-md bg-card text-destructive shadow-sm hover:bg-destructive/10"
+                  className="absolute right-2 top-1 z-20 grid h-6 w-6 place-items-center rounded-md bg-card text-destructive shadow-sm hover:bg-destructive/10"
                 >
                   <Trash2 size={13} />
                 </button>
               )}
             </>
           )}
-          <div className="h-full w-full overflow-hidden">
+          <div className={`h-full w-full overflow-hidden ${editable ? "pt-8" : ""}`}>
             <WidgetRenderer
               title={w.title}
               presetId={w.preset as PresetId}
