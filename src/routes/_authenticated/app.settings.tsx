@@ -42,6 +42,42 @@ function SettingsPage() {
       <section className="rounded-[14px] border border-border bg-card p-6 shadow-card">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <h2 className="text-[15px] font-bold">Identidade do sistema</h2>
+            <p className="text-xs text-muted-foreground">
+              Esse nome aparece em todas as páginas e na aba do navegador. Persiste no banco.
+            </p>
+          </div>
+        </div>
+        <form onSubmit={onSave} className="mt-5 flex flex-wrap items-end gap-3">
+          <label className="block flex-1 min-w-[220px]">
+            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Nome do sistema
+            </span>
+            <input
+              required
+              maxLength={60}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
+              placeholder="DigitalDash"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={saving || draft.trim() === systemName.trim() || !draft.trim()}
+            className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Salvar"}
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-[14px] border border-border bg-card p-6 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
             <UserIcon size={18} />
           </div>
           <div>
