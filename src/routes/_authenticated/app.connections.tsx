@@ -6,6 +6,7 @@ import {
   subscribe,
   type Connection,
 } from "@/lib/data";
+import { testConnectionOnServer } from "@/lib/connections.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Database, Plus, Trash2, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
@@ -58,11 +59,26 @@ function ConnectionsPage() {
 
   const test = async (c: Connection) => {
     setTesting(c.id);
-    await new Promise((r) => setTimeout(r, 900));
-    const ok = c.host.length > 0 && c.port > 0;
-    setStatus((s) => ({ ...s, [c.id]: ok ? "ok" : "fail" }));
-    setTesting(null);
-    toast[ok ? "success" : "error"](ok ? "Conexão bem-sucedida (simulada)" : "Falha ao conectar");
+    try {
+      const res = await testConnectionOnServer({
+        data: {
+          host: c.host,
+          port: c.port,
+          database: c.database,
+          username: c.username,
+          password: c.password,
+          ssl: c.ssl,
+        },
+      });
+      setStatus((s) => ({ ...s, [c.id]: res.ok ? "ok" : "fail" }));
+      if (res.ok) toast.success(`Conectado em ${res.latencyMs}ms · MySQL ${res.version}`);
+      else toast.error(res.message);
+    } catch (err) {
+      setStatus((s) => ({ ...s, [c.id]: "fail" }));
+      toast.error((err as Error).message);
+    } finally {
+      setTesting(null);
+    }
   };
 
   return (

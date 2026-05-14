@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { createConnection } from "@/lib/data";
+import { testConnectionOnServer } from "@/lib/connections.functions";
 import { ArrowLeft, Database } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,13 +32,30 @@ function NewConnectionPage() {
 
   const test = async () => {
     setTesting(true);
-    await new Promise((r) => setTimeout(r, 900));
-    const ok = !!form.host && form.port > 0;
-    setTested(ok ? "ok" : "fail");
-    setTesting(false);
-    toast[ok ? "success" : "error"](
-      ok ? "Conexão bem-sucedida (simulada)" : "Verifique host e porta",
-    );
+    try {
+      const res = await testConnectionOnServer({
+        data: {
+          host: form.host,
+          port: form.port,
+          database: form.database,
+          username: form.username,
+          password: form.password,
+          ssl: form.ssl,
+        },
+      });
+      if (res.ok) {
+        setTested("ok");
+        toast.success(`Conectado em ${res.latencyMs}ms · MySQL ${res.version}`);
+      } else {
+        setTested("fail");
+        toast.error(res.message);
+      }
+    } catch (err) {
+      setTested("fail");
+      toast.error((err as Error).message);
+    } finally {
+      setTesting(false);
+    }
   };
 
   const onSubmit = async (e: FormEvent) => {
