@@ -10,9 +10,7 @@ const CreateOrgInput = z.object({
 export const createOrgOnServer = createServerFn({ method: "POST" })
   .inputValidator((input) => CreateOrgInput.parse(input))
   .handler(async ({ data }) => {
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(
-      data.accessToken,
-    );
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(data.accessToken);
     const user = userData.user;
 
     if (userError || !user) {
