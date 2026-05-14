@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Responsive, WidthProvider, type Layout } from "react-grid-layout";
+import RGL, { Responsive, WidthProvider, type Layout as LayoutItem } from "react-grid-layout";
 import { Trash2 } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
 import type { Widget } from "@/lib/data";
@@ -8,12 +8,16 @@ import type { PresetId } from "@/lib/glpi-presets";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+// `Responsive` is exported as a named member on this build of react-grid-layout;
+// `WidthProvider` lives on the default export.
+const RP = (RGL as any).Responsive ?? Responsive;
+const WP = (RGL as any).WidthProvider ?? WidthProvider;
+const ResponsiveGridLayout = WP(RP);
 
 type Props = {
   widgets: Widget[];
   editable: boolean;
-  onLayoutChange?: (layouts: Record<string, Layout>) => void;
+  onLayoutChange?: (layouts: Record<string, LayoutItem>) => void;
   onRemove?: (id: string) => void;
 };
 
