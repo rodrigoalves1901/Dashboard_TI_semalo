@@ -92,20 +92,38 @@ function DashboardEditor() {
     }
   };
 
-  const onLayout = async (map: Record<string, { x: number; y: number; w: number; h: number }>) => {
-    // optimistic update + persist
+  const onLayout = (map: Record<string, { x: number; y: number; w: number; h: number }>) => {
+    // optimistic update only — persistence happens via "Salvar layout"
     setWidgets((prev) =>
       prev.map((w) => (map[w.id] ? { ...w, position: { x: map[w.id].x, y: map[w.id].y, w: map[w.id].w, h: map[w.id].h } } : w)),
     );
+    setPending((prev) => ({ ...prev, ...map }));
+  };
+
+  const saveLayout = async () => {
+    if (!hasPending) return;
+    setSaving(true);
     try {
       await Promise.all(
-        Object.entries(map).map(([wid, p]) =>
+        Object.entries(pending).map(([wid, p]) =>
           updateWidgetPosition(wid, { x: p.x, y: p.y, w: p.w, h: p.h }),
         ),
       );
+      setPending({});
+      toast.success("Layout salvo");
     } catch (err) {
       toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const finish = async () => {
+    if (hasPending) {
+      const ok = window.confirm("Você tem alterações não salvas. Salvar antes de sair?");
+      if (ok) await saveLayout();
+    }
+    navigate({ to: "/app/dashboards/$id", params: { id: dashboard.id } });
   };
 
   return (
@@ -120,15 +138,27 @@ function DashboardEditor() {
             {dashboard.name}
           </button>
           <p className="mt-1 text-sm text-muted-foreground">
-            Editor — arraste e redimensione os widgets. Mudanças salvam automaticamente.
+            Editor — arraste e redimensione os widgets, depois clique em <b>Salvar layout</b>.
           </p>
         </div>
-        <button
-          onClick={() => navigate({ to: "/app/dashboards/$id", params: { id: dashboard.id } })}
-          className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          Concluir
-        </button>
+        <div className="flex items-center gap-2">
+          {hasPending && (
+            <span className="text-xs text-muted-foreground">Alterações não salvas</span>
+          )}
+          <button
+            onClick={saveLayout}
+            disabled={!hasPending || saving}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+          >
+            <Save size={14} /> {saving ? "Salvando..." : "Salvar layout"}
+          </button>
+          <button
+            onClick={finish}
+            className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary"
+          >
+            Concluir
+          </button>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
