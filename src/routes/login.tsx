@@ -12,6 +12,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const { signIn } = useAuth();
+  const { systemName } = useAppSettings();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
