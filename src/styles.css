@@ -183,3 +183,58 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* ===== React Grid Layout — drag/resize visual feedback ===== */
+.react-grid-item {
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+/* Drop placeholder shown under the item being dragged/resized */
+.react-grid-item.react-grid-placeholder {
+  background: color-mix(in oklab, var(--primary) 18%, transparent) !important;
+  border: 2px dashed var(--primary);
+  border-radius: 14px;
+  opacity: 1 !important;
+  transition-duration: 100ms;
+  z-index: 2;
+}
+
+/* Item currently being dragged */
+.react-grid-item.react-draggable-dragging {
+  cursor: grabbing !important;
+  z-index: 30;
+  box-shadow:
+    0 18px 40px -12px color-mix(in oklab, var(--primary) 45%, transparent),
+    0 0 0 2px var(--primary);
+  transform: scale(1.02);
+  opacity: 0.95;
+}
+
+/* Item currently being resized */
+.react-grid-item.resizing {
+  z-index: 30;
+  box-shadow:
+    0 18px 40px -12px color-mix(in oklab, var(--primary) 45%, transparent),
+    0 0 0 2px var(--primary);
+  opacity: 0.95;
+}
+
+/* Always show grab cursor on the drag handle */
+.widget-drag-handle {
+  cursor: grab;
+}
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Make the south-east resize handle more visible */
+.react-resizable-handle {
+  opacity: 0.35;
+  transition: opacity 150ms ease;
+}
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 1;
+}
+.react-resizable-handle::after {
+  border-color: var(--primary) !important;
+}
