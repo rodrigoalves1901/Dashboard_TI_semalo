@@ -12,11 +12,13 @@ const ResponsiveGrid = WidthProvider(GridLayout);
 
 type LayoutItem = Layout[number];
 
+type Pos = { x: number; y: number; w: number; h: number };
+
 type Props = {
   widgets: Widget[];
   editable: boolean;
   onLayoutChange?: (layouts: Record<string, LayoutItem>) => void;
-  onCommit?: (id: string, position: { x: number; y: number; w: number; h: number }) => void;
+  onCommit?: (positions: Record<string, Pos>) => void;
   onRemove?: (id: string) => void;
 };
 
