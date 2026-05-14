@@ -30,6 +30,9 @@ function DashboardEditor() {
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [conns, setConns] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
+  const [saving, setSaving] = useState(false);
+  const hasPending = Object.keys(pending).length > 0;
 
   useEffect(() => {
     let cancelled = false;
