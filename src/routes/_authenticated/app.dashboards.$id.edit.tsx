@@ -32,6 +32,10 @@ function DashboardEditor() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
   const [saving, setSaving] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  // Snapshot of positions as they were on first load — used by "Desfazer".
+  const baselineRef = useRef<Record<string, { x: number; y: number; w: number; h: number }> | null>(null);
+  const [gridKey, setGridKey] = useState(0);
   const hasPending = Object.keys(pending).length > 0;
 
   useEffect(() => {
@@ -47,6 +51,11 @@ function DashboardEditor() {
         setDashboard(d);
         setWidgets(ws);
         setConns(cs);
+        if (!baselineRef.current) {
+          const snap: Record<string, { x: number; y: number; w: number; h: number }> = {};
+          for (const w of ws) if (w.position) snap[w.id] = { ...w.position };
+          baselineRef.current = snap;
+        }
       } catch (err) {
         if (!cancelled) toast.error((err as Error).message);
       } finally {
