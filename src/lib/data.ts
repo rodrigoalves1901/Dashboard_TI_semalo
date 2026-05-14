@@ -251,7 +251,7 @@ export async function updateWidgetPosition(id: string, position: WidgetPosition)
     .update({ position })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  // No emit — local state already optimistic.
+  emit();
 }
 
 function mapWidget(r: any): Widget {
