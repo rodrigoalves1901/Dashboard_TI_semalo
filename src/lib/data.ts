@@ -9,7 +9,7 @@ export type Org = {
   createdAt: string;
 };
 
-export type SystemType = "mysql" | "mariadb" | "sqlserver" | "sharepoint";
+export type SystemType = "mysql" | "mariadb" | "sqlserver" | "sharepoint" | "demo";
 
 export type Connection = {
   id: string;

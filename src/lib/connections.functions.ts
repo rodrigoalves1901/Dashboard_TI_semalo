@@ -2,11 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const inputSchema = z.object({
-  systemType: z.enum(["mysql", "mariadb", "sqlserver", "sharepoint"]),
-  host: z.string().trim().min(1).max(500),
+  systemType: z.enum(["mysql", "mariadb", "sqlserver", "sharepoint", "demo"]),
+  host: z.string().trim().min(0).max(500),
   port: z.number().int().min(1).max(65535),
   database: z.string().trim().min(0).max(500),
-  username: z.string().trim().min(1).max(255),
+  username: z.string().trim().min(0).max(255),
   password: z.string().max(1000),
   ssl: z.boolean().optional(),
 });
@@ -28,6 +28,8 @@ export const testConnectionOnServer = createServerFn({ method: "POST" })
           return await testSqlServer(data, start);
         case "sharepoint":
           return await testSharepoint(data, start);
+        case "demo":
+          return { ok: true, info: "Modo Demo · dados mockados", latencyMs: Date.now() - start };
       }
     } catch (err) {
       return { ok: false, message: (err as Error).message ?? "Falha ao conectar" };

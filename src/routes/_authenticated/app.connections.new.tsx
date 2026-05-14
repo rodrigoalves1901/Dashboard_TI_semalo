@@ -15,9 +15,11 @@ const SYSTEM_DEFAULTS: Record<SystemType, { port: number; database: string }> = 
   mariadb: { port: 3306, database: "mariadb" },
   sqlserver: { port: 1433, database: "master" },
   sharepoint: { port: 443, database: "" },
+  demo: { port: 0, database: "demo" },
 };
 
 const SYSTEM_LABELS: Record<SystemType, string> = {
+  demo: "Demo (dados mockados)",
   mysql: "MySQL",
   mariadb: "MariaDB",
   sqlserver: "SQL Server",
@@ -29,10 +31,10 @@ function NewConnectionPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
-    systemType: "mysql" as SystemType,
+    systemType: "demo" as SystemType,
     host: "",
-    port: 3306,
-    database: "mysql",
+    port: 0,
+    database: "demo",
     username: "",
     password: "",
     ssl: false,
@@ -96,6 +98,7 @@ function NewConnectionPage() {
 
   const isSharepoint = form.systemType === "sharepoint";
   const isSqlServer = form.systemType === "sqlserver";
+  const isDemo = form.systemType === "demo";
 
   return (
     <div className="max-w-3xl space-y-6">
