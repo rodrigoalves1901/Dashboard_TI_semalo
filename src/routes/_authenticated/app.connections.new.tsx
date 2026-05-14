@@ -153,8 +153,7 @@ function NewConnectionPage() {
             para construir e validar dashboards enquanto o acesso real ao banco não está liberado.
           </div>
         ) : isSharepoint ? (
-          <></>
-            <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
+          <>
               <input
                 required
                 value={form.host}
