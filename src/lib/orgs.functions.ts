@@ -2,13 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const CreateOrgInput = z.object({
-  name: z.string().trim().min(1).max(120),
-  accessToken: z.string().min(1),
-});
-
 export const createOrgOnServer = createServerFn({ method: "POST" })
-  .inputValidator((input) => CreateOrgInput.parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        name: z.string().trim().min(1).max(120),
+        accessToken: z.string().min(1),
+      })
+      .parse(input),
+  )
   .handler(async ({ data }) => {
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(data.accessToken);
     const user = userData.user;
