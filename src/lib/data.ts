@@ -1,5 +1,6 @@
 // Supabase-backed data layer for orgs, connections, dashboards, widgets.
 import { supabase } from "@/integrations/supabase/client";
+import { createOrgOnServer } from "@/lib/orgs.functions";
 
 export type Org = {
   id: string;
@@ -84,15 +85,10 @@ export async function listMyOrgs(): Promise<Org[]> {
 }
 
 export async function createOrg(name: string): Promise<Org> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const uid = userRes.user?.id;
-  if (!uid) throw new Error("Não autenticado");
-  const { data, error } = await supabase
-    .from("orgs")
-    .insert({ name, owner_id: uid })
-    .select("id,name,owner_id,created_at")
-    .single();
-  if (error) throw new Error(error.message);
+  const { data: sessionRes } = await supabase.auth.getSession();
+  const accessToken = sessionRes.session?.access_token;
+  if (!accessToken) throw new Error("Não autenticado");
+  const data = await createOrgOnServer({ data: { name, accessToken } });
   emit();
   return {
     id: data.id,
