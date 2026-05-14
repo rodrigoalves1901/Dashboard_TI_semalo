@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signup")({
