@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
 import { Route as AuthenticatedAppConnectionsIndexRouteImport } from './routes/_authenticated/app.connections.index'
 import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
 import { Route as AuthenticatedAppConnectionsNewRouteImport } from './routes/_authenticated/app.connections.new'
@@ -62,11 +63,17 @@ const AuthenticatedAppSettingsRoute =
     path: '/app/settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppConnectionsRoute =
+  AuthenticatedAppConnectionsRouteImport.update({
+    id: '/app/connections',
+    path: '/app/connections',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppConnectionsIndexRoute =
   AuthenticatedAppConnectionsIndexRouteImport.update({
-    id: '/app/connections/',
-    path: '/app/connections/',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAppConnectionsRoute,
   } as any)
 const AuthenticatedAppDashboardsIdRoute =
   AuthenticatedAppDashboardsIdRouteImport.update({
@@ -76,9 +83,9 @@ const AuthenticatedAppDashboardsIdRoute =
   } as any)
 const AuthenticatedAppConnectionsNewRoute =
   AuthenticatedAppConnectionsNewRouteImport.update({
-    id: '/app/connections/new',
-    path: '/app/connections/new',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppConnectionsRoute,
   } as any)
 const AuthenticatedAppDashboardsIdEditRoute =
   AuthenticatedAppDashboardsIdEditRouteImport.update({
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/app/connections'
     | '/app/settings'
     | '/app/'
     | '/app/connections/new'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/_authenticated/app/connections'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/connections/new'
@@ -238,12 +249,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/connections': {
+      id: '/_authenticated/app/connections'
+      path: '/app/connections'
+      fullPath: '/app/connections'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/connections/': {
       id: '/_authenticated/app/connections/'
-      path: '/app/connections'
+      path: '/'
       fullPath: '/app/connections/'
       preLoaderRoute: typeof AuthenticatedAppConnectionsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAppConnectionsRoute
     }
     '/_authenticated/app/dashboards/$id': {
       id: '/_authenticated/app/dashboards/$id'
@@ -254,10 +272,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/app/connections/new': {
       id: '/_authenticated/app/connections/new'
-      path: '/app/connections/new'
+      path: '/new'
       fullPath: '/app/connections/new'
       preLoaderRoute: typeof AuthenticatedAppConnectionsNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAppConnectionsRoute
     }
     '/_authenticated/app/dashboards/$id/edit': {
       id: '/_authenticated/app/dashboards/$id/edit'
@@ -268,6 +286,23 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAppConnectionsRouteChildren {
+  AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
+  AuthenticatedAppConnectionsIndexRoute: typeof AuthenticatedAppConnectionsIndexRoute
+}
+
+const AuthenticatedAppConnectionsRouteChildren: AuthenticatedAppConnectionsRouteChildren =
+  {
+    AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
+    AuthenticatedAppConnectionsIndexRoute:
+      AuthenticatedAppConnectionsIndexRoute,
+  }
+
+const AuthenticatedAppConnectionsRouteWithChildren =
+  AuthenticatedAppConnectionsRoute._addFileChildren(
+    AuthenticatedAppConnectionsRouteChildren,
+  )
 
 interface AuthenticatedAppDashboardsIdRouteChildren {
   AuthenticatedAppDashboardsIdEditRoute: typeof AuthenticatedAppDashboardsIdEditRoute
@@ -285,20 +320,19 @@ const AuthenticatedAppDashboardsIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRouteWithChildren
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
-  AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
   AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
-  AuthenticatedAppConnectionsIndexRoute: typeof AuthenticatedAppConnectionsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAppConnectionsRoute:
+    AuthenticatedAppConnectionsRouteWithChildren,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
-  AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
   AuthenticatedAppDashboardsIdRoute:
     AuthenticatedAppDashboardsIdRouteWithChildren,
-  AuthenticatedAppConnectionsIndexRoute: AuthenticatedAppConnectionsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
