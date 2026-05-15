@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { X, Pause, Play, SkipBack, SkipForward, ChevronDown, ChevronUp } from "lucide-react";
 import { FullscreenDashboard } from "./FullscreenDashboard";
 import type { Dashboard } from "@/lib/data";
 
@@ -17,6 +17,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
   const startedAt = useRef<number>(Date.now());
 
   const current = entries[index];
@@ -79,7 +80,6 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
   return (
     <>
       <FullscreenDashboard
-        key={current.dashboard.id}
         dashboardId={current.dashboard.id}
         intervalSeconds={0}
         hideChrome
@@ -102,37 +102,48 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
         </span>
       </div>
 
-      {/* Bottom controls */}
-      <div className="fixed bottom-4 left-1/2 z-[120] -translate-x-1/2 flex items-center gap-1 rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-popover backdrop-blur">
+      {/* Bottom-right controls (collapsible) */}
+      <div className="fixed bottom-3 right-3 z-[120] flex items-center gap-1 rounded-full border border-border bg-card/90 px-1.5 py-1 shadow-popover backdrop-blur">
         <button
-          onClick={prev}
-          aria-label="Anterior"
-          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expandir controles" : "Minimizar controles"}
+          className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
-          <SkipBack size={16} />
+          {collapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
-        <button
-          onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? "Retomar" : "Pausar"}
-          className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90"
-        >
-          {paused ? <Play size={18} /> : <Pause size={18} />}
-        </button>
-        <button
-          onClick={next}
-          aria-label="Próximo"
-          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
-        >
-          <SkipForward size={16} />
-        </button>
-        <span className="mx-2 h-5 w-px bg-border" />
-        <button
-          onClick={onExit}
-          aria-label="Sair"
-          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
-        >
-          <X size={16} />
-        </button>
+        {!collapsed && (
+          <>
+            <button
+              onClick={prev}
+              aria-label="Anterior"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <SkipBack size={14} />
+            </button>
+            <button
+              onClick={() => setPaused((p) => !p)}
+              aria-label={paused ? "Retomar" : "Pausar"}
+              className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90"
+            >
+              {paused ? <Play size={16} /> : <Pause size={16} />}
+            </button>
+            <button
+              onClick={next}
+              aria-label="Próximo"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <SkipForward size={14} />
+            </button>
+            <span className="mx-1 h-5 w-px bg-border" />
+            <button
+              onClick={onExit}
+              aria-label="Sair"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <X size={14} />
+            </button>
+          </>
+        )}
       </div>
     </>
   );
