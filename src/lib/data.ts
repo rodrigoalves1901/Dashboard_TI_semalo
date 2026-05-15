@@ -28,7 +28,7 @@ export type Connection = {
   createdAt: string;
 };
 
-export type ChartType = "metric" | "bar" | "line" | "donut" | "table";
+export type ChartType = "metric" | "bar" | "line" | "donut" | "table" | "markdown" | "divider";
 
 export type Dashboard = {
   id: string;
@@ -49,6 +49,7 @@ export type Widget = {
   preset: string;
   refreshInterval: number;
   position: WidgetPosition | null;
+  content: string | null;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -229,8 +230,10 @@ export async function createWidget(input: Omit<Widget, "id">): Promise<Widget> {
       connection_id: input.connectionId,
       title: input.title,
       chart_type: input.chartType,
-      preset: input.preset,
+      preset: input.preset || null,
       refresh_interval: input.refreshInterval,
+      content: input.content,
+      position: input.position,
     })
     .select("*")
     .single();
@@ -261,10 +264,63 @@ function mapWidget(r: any): Widget {
     connectionId: r.connection_id,
     title: r.title,
     chartType: r.chart_type,
-    preset: r.preset,
+    preset: r.preset ?? "",
     refreshInterval: r.refresh_interval,
     position: (r.position as WidgetPosition | null) ?? null,
+    content: (r.content as string | null) ?? null,
   };
+}
+
+// ---------- Sample dashboard ----------
+export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
+  const dash = await createDashboard(
+    orgId,
+    "Modelo — Todos os widgets",
+    "Dashboard de referência com exemplos de cada tipo de widget, incluindo cards de texto/markdown e divisórias.",
+  );
+
+  const items: Array<Omit<Widget, "id" | "dashboardId">> = [
+    { connectionId: null, title: "Visão geral", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 0, w: 12, h: 1 }, content: null },
+    { connectionId: null, title: "Tickets em aberto", chartType: "metric", preset: "tickets_open", refreshInterval: 60, position: { x: 0, y: 1, w: 3, h: 2 }, content: null },
+    { connectionId: null, title: "Tickets resolvidos", chartType: "metric", preset: "tickets_solved", refreshInterval: 60, position: { x: 3, y: 1, w: 3, h: 2 }, content: null },
+    { connectionId: null, title: "Tickets pendentes", chartType: "metric", preset: "tickets_pending", refreshInterval: 60, position: { x: 6, y: 1, w: 3, h: 2 }, content: null },
+    { connectionId: null, title: "Tickets atrasados", chartType: "metric", preset: "tickets_late", refreshInterval: 60, position: { x: 9, y: 1, w: 3, h: 2 }, content: null },
+    {
+      connectionId: null,
+      title: "Sobre este dashboard",
+      chartType: "markdown",
+      preset: "",
+      refreshInterval: 0,
+      position: { x: 0, y: 3, w: 12, h: 3 },
+      content:
+        "## Bem-vindo ao dashboard modelo\n\nEste dashboard reúne **todos os tipos de widgets** disponíveis. Use-o como referência ao montar os seus.\n\n- 📊 Métricas, barras, linhas, donut e tabela\n- 📝 Cards de texto em **Markdown** (com suporte a imagens)\n- ➖ Divisórias para organizar seções\n\n![Exemplo](https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=200&fit=crop)",
+    },
+    { connectionId: null, title: "Distribuições", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 6, w: 12, h: 1 }, content: null },
+    { connectionId: null, title: "Tickets por status", chartType: "donut", preset: "tickets_by_status", refreshInterval: 60, position: { x: 0, y: 7, w: 6, h: 4 }, content: null },
+    { connectionId: null, title: "Tickets por prioridade", chartType: "donut", preset: "tickets_by_priority", refreshInterval: 60, position: { x: 6, y: 7, w: 6, h: 4 }, content: null },
+    { connectionId: null, title: "Tickets por categoria", chartType: "bar", preset: "tickets_by_category", refreshInterval: 60, position: { x: 0, y: 11, w: 6, h: 4 }, content: null },
+    { connectionId: null, title: "Tickets por técnico", chartType: "bar", preset: "tickets_by_technician", refreshInterval: 60, position: { x: 6, y: 11, w: 6, h: 4 }, content: null },
+    { connectionId: null, title: "Evolução & SLA", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 15, w: 12, h: 1 }, content: null },
+    { connectionId: null, title: "Evolução de tickets", chartType: "line", preset: "tickets_evolution", refreshInterval: 60, position: { x: 0, y: 16, w: 8, h: 4 }, content: null },
+    { connectionId: null, title: "Cumprimento de SLA", chartType: "metric", preset: "sla_compliance", refreshInterval: 60, position: { x: 8, y: 16, w: 4, h: 4 }, content: null },
+    { connectionId: null, title: "Detalhamento por status", chartType: "table", preset: "tickets_by_status", refreshInterval: 60, position: { x: 0, y: 20, w: 12, h: 5 }, content: null },
+    {
+      connectionId: null,
+      title: "Como usar",
+      chartType: "markdown",
+      preset: "",
+      refreshInterval: 0,
+      position: { x: 0, y: 25, w: 12, h: 3 },
+      content:
+        "### Próximos passos\n\n1. Clique em **Editar dashboard** para reorganizar os blocos.\n2. Use **Adicionar widget** e escolha *Texto/Markdown* para criar seções com instruções, imagens ou links.\n3. Use *Divisória* para separar grupos de widgets.\n\n> Dica: imagens em markdown usam `![alt](url)` — qualquer URL pública funciona.",
+    },
+  ];
+
+  for (const w of items) {
+    await createWidget({ ...w, dashboardId: dash.id });
+  }
+  emit();
+  return dash;
 }
 
 // ---------- App settings (singleton) ----------

@@ -12,6 +12,8 @@ const CHART_OPTIONS: { value: ChartType; label: string }[] = [
   { value: "line", label: "Linha" },
   { value: "donut", label: "Donut" },
   { value: "table", label: "Tabela" },
+  { value: "markdown", label: "Texto/Markdown" },
+  { value: "divider", label: "Divisória" },
 ];
 
 type Props = {
@@ -25,9 +27,13 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
   const [presetId, setPresetId] = useState<PresetId>("tickets_open");
   const [chartType, setChartType] = useState<ChartType>("metric");
   const [connectionId, setConnectionId] = useState<string>("");
+  const [content, setContent] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
+  const isText = chartType === "markdown" || chartType === "divider";
+
   useEffect(() => {
+    if (isText) return;
     const p = getPreset(presetId);
     if (p) {
       setChartType(p.defaultChart);
@@ -37,20 +43,23 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
   }, [presetId]);
 
   const submit = async () => {
-    if (!title.trim()) return toast.error("Defina um título");
+    if (chartType !== "divider" && !title.trim() && chartType !== "markdown") return toast.error("Defina um título");
+    if (chartType === "markdown" && !content.trim()) return toast.error("Escreva algum conteúdo");
     setSaving(true);
     try {
       await createWidget({
         dashboardId,
-        connectionId: connectionId || null,
-        title: title.trim(),
+        connectionId: isText ? null : (connectionId || null),
+        title: title.trim() || (chartType === "divider" ? "" : "Widget"),
         chartType,
-        preset: presetId,
-        refreshInterval: 60,
+        preset: isText ? "" : presetId,
+        refreshInterval: isText ? 0 : 60,
         position: null,
+        content: chartType === "markdown" ? content : null,
       });
       toast.success("Widget adicionado");
       setTitle("");
+      setContent("");
       onCreated?.();
     } catch (err) {
       toast.error((err as Error).message);
@@ -61,36 +70,7 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
 
   return (
     <div className="space-y-4">
-      <Field label="Conexão">
-        <select value={connectionId} onChange={(e) => setConnectionId(e.target.value)} className="wf-input">
-          <option value="">— Sem conexão (dados de exemplo) —</option>
-          {connections.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({c.systemType})
-            </option>
-          ))}
-        </select>
-        {connections.length === 0 && (
-          <Link to="/app/connections/new" className="mt-1 inline-block text-[11px] font-semibold text-primary hover:underline">
-            + Adicionar conexão
-          </Link>
-        )}
-      </Field>
-
-      <Field label="Métrica / Consulta">
-        <select value={presetId} onChange={(e) => setPresetId(e.target.value as PresetId)} className="wf-input">
-          {(["Tickets", "SLA", "Operação"] as const).map((cat) => (
-            <optgroup key={cat} label={cat}>
-              {PRESETS.filter((p) => p.category === cat).map((p) => (
-                <option key={p.id} value={p.id}>{p.label}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        <span className="mt-1 block text-[11px] text-muted-foreground">{getPreset(presetId)?.description}</span>
-      </Field>
-
-      <Field label="Tipo de gráfico">
+      <Field label="Tipo">
         <div className="grid grid-cols-3 gap-2">
           {CHART_OPTIONS.map((opt) => (
             <button
@@ -109,18 +89,75 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
         </div>
       </Field>
 
-      <Field label="Título do widget">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="wf-input" />
-      </Field>
+      {!isText && (
+        <>
+          <Field label="Conexão">
+            <select value={connectionId} onChange={(e) => setConnectionId(e.target.value)} className="wf-input">
+              <option value="">— Sem conexão (dados de exemplo) —</option>
+              {connections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.systemType})
+                </option>
+              ))}
+            </select>
+            {connections.length === 0 && (
+              <Link to="/app/connections/new" className="mt-1 inline-block text-[11px] font-semibold text-primary hover:underline">
+                + Adicionar conexão
+              </Link>
+            )}
+          </Field>
+
+          <Field label="Métrica / Consulta">
+            <select value={presetId} onChange={(e) => setPresetId(e.target.value as PresetId)} className="wf-input">
+              {(["Tickets", "SLA", "Operação"] as const).map((cat) => (
+                <optgroup key={cat} label={cat}>
+                  {PRESETS.filter((p) => p.category === cat).map((p) => (
+                    <option key={p.id} value={p.id}>{p.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-muted-foreground">{getPreset(presetId)?.description}</span>
+          </Field>
+        </>
+      )}
+
+      {chartType !== "divider" && (
+        <Field label={chartType === "markdown" ? "Título (opcional)" : "Título do widget"}>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="wf-input" />
+        </Field>
+      )}
+
+      {chartType === "divider" && (
+        <Field label="Rótulo da divisória (opcional)">
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="wf-input" placeholder="Ex.: Visão geral" />
+        </Field>
+      )}
+
+      {chartType === "markdown" && (
+        <Field label="Conteúdo (Markdown)">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="wf-input"
+            style={{ height: 180, padding: 12, lineHeight: 1.5, fontFamily: "ui-monospace, monospace", fontSize: 13 }}
+            placeholder={"## Título\n\nTexto, **negrito**, [links](https://...)\n\n![imagem](https://exemplo.com/img.png)"}
+          />
+          <span className="mt-1 block text-[11px] text-muted-foreground">
+            Suporta markdown completo. Imagens via <code>![alt](url)</code>.
+          </span>
+        </Field>
+      )}
 
       <div className="rounded-lg border border-dashed border-border-soft p-3">
         <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Pré-visualização</span>
         <div className="mt-2">
           <WidgetRenderer
-            title={title || "Widget"}
+            title={title || (chartType === "divider" ? "" : "Widget")}
             presetId={presetId}
             chartType={chartType}
             suffix={presetId === "sla_compliance" ? "%" : undefined}
+            content={content}
           />
         </div>
       </div>
