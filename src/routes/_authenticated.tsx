@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,6 +13,8 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthGate() {
   const { user, ready, orgs, currentOrg, refreshOrgs } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isFullscreenRoute = /^\/app\/(tv\/[^/]+|slideshow\/[^/]+\/play)$/.test(pathname);
 
   useEffect(() => {
     if (ready && !user) navigate({ to: "/login", replace: true });
@@ -30,6 +32,10 @@ function AuthGate() {
   // User authenticated but has no organization yet — onboarding step.
   if (orgs.length === 0 || !currentOrg) {
     return <OnboardingCreateOrg defaultName={`Workspace de ${user.name.split(" ")[0]}`} onCreated={refreshOrgs} />;
+  }
+
+  if (isFullscreenRoute) {
+    return <Outlet />;
   }
 
   return (
