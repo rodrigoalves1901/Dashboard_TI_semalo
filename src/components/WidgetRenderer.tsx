@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Bar,
   BarChart,
@@ -44,9 +46,34 @@ type Props = {
   chartType: ChartType;
   suffix?: string;
   bare?: boolean;
+  content?: string | null;
 };
 
-export function WidgetRenderer({ title, presetId, chartType, suffix, bare }: Props) {
+export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content }: Props) {
+  if (chartType === "divider") {
+    return (
+      <div className="flex h-full w-full items-center gap-3 px-2">
+        <div className="h-px flex-1 bg-border" />
+        {title && (
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {title}
+          </span>
+        )}
+        <div className="h-px flex-1 bg-border" />
+      </div>
+    );
+  }
+
+  if (chartType === "markdown") {
+    return (
+      <div className={bare ? "h-full overflow-auto p-5" : "rounded-[14px] border border-border bg-card p-5 shadow-card"}>
+        <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-img:rounded-lg prose-img:my-3 prose-img:max-h-64 prose-img:w-auto dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content ?? ""}</ReactMarkdown>
+        </div>
+      </div>
+    );
+  }
+
   const data = useMemo(() => mockData(presetId), [presetId]);
   const shellClass = bare
     ? "h-full p-5"
