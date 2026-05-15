@@ -7,10 +7,13 @@ type Props = {
   delta?: number;
   suffix?: string;
   bare?: boolean;
+  /** Multiplier applied to the main value font-size. 1 = 100%. */
+  valueScale?: number;
 };
 
-export function MetricCard({ label, value, delta, suffix, bare }: Props) {
+export function MetricCard({ label, value, delta, suffix, bare, valueScale = 1 }: Props) {
   const positive = (delta ?? 0) >= 0;
+  const baseSize = 22;
   return (
     <div
       className={cn(
@@ -20,7 +23,12 @@ export function MetricCard({ label, value, delta, suffix, bare }: Props) {
     >
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
       <div className="mt-2 flex items-baseline gap-1">
-        <div className="text-[22px] font-bold leading-7 text-foreground">{value}</div>
+        <div
+          className="font-bold leading-tight text-foreground"
+          style={{ fontSize: `${baseSize * valueScale}px`, lineHeight: 1.05 }}
+        >
+          {value}
+        </div>
         {suffix && <div className="text-sm text-muted-foreground">{suffix}</div>}
       </div>
       {delta !== undefined && (

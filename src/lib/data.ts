@@ -50,6 +50,8 @@ export type Widget = {
   refreshInterval: number;
   position: WidgetPosition | null;
   content: string | null;
+  /** Multiplier for the metric value font-size. 1 = 100%. */
+  valueScale: number;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -222,7 +224,7 @@ export async function listWidgets(dashboardId: string): Promise<Widget[]> {
   return (data ?? []).map(mapWidget);
 }
 
-export async function createWidget(input: Omit<Widget, "id">): Promise<Widget> {
+export async function createWidget(input: Omit<Widget, "id" | "valueScale"> & { valueScale?: number }): Promise<Widget> {
   const { data, error } = await supabase
     .from("widgets")
     .insert({
@@ -234,6 +236,7 @@ export async function createWidget(input: Omit<Widget, "id">): Promise<Widget> {
       refresh_interval: input.refreshInterval,
       content: input.content,
       position: input.position,
+      value_scale: input.valueScale ?? 1,
     })
     .select("*")
     .single();
@@ -257,7 +260,18 @@ export async function updateWidgetPosition(id: string, position: WidgetPosition)
   emit();
 }
 
+export async function updateWidgetValueScale(id: string, valueScale: number) {
+  const clamped = Math.min(6, Math.max(0.5, Math.round(valueScale * 100) / 100));
+  const { error } = await supabase
+    .from("widgets")
+    .update({ value_scale: clamped })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
 function mapWidget(r: any): Widget {
+  const vs = Number(r.value_scale);
   return {
     id: r.id,
     dashboardId: r.dashboard_id,
@@ -268,6 +282,7 @@ function mapWidget(r: any): Widget {
     refreshInterval: r.refresh_interval,
     position: (r.position as WidgetPosition | null) ?? null,
     content: (r.content as string | null) ?? null,
+    valueScale: Number.isFinite(vs) && vs > 0 ? vs : 1,
   };
 }
 
@@ -279,7 +294,7 @@ export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
     "Dashboard de referência com exemplos de cada tipo de widget, incluindo cards de texto/markdown e divisórias.",
   );
 
-  const items: Array<Omit<Widget, "id" | "dashboardId">> = [
+  const items: Array<Omit<Widget, "id" | "dashboardId" | "valueScale"> & { valueScale?: number }> = [
     { connectionId: null, title: "Visão geral", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 0, w: 12, h: 1 }, content: null },
     { connectionId: null, title: "Tickets em aberto", chartType: "metric", preset: "tickets_open", refreshInterval: 60, position: { x: 0, y: 1, w: 3, h: 2 }, content: null },
     { connectionId: null, title: "Tickets resolvidos", chartType: "metric", preset: "tickets_solved", refreshInterval: 60, position: { x: 3, y: 1, w: 3, h: 2 }, content: null },
