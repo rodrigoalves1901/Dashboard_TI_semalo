@@ -28,6 +28,7 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
   const [chartType, setChartType] = useState<ChartType>("metric");
   const [connectionId, setConnectionId] = useState<string>("");
   const [content, setContent] = useState<string>("");
+  const [valueScale, setValueScale] = useState<number>(1);
   const [saving, setSaving] = useState(false);
 
   const isText = chartType === "markdown" || chartType === "divider";
@@ -56,6 +57,7 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
         refreshInterval: isText ? 0 : 60,
         position: null,
         content: chartType === "markdown" ? content : null,
+        valueScale: chartType === "metric" ? valueScale : 1,
       });
       toast.success("Widget adicionado");
       setTitle("");
@@ -145,6 +147,23 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
           />
           <span className="mt-1 block text-[11px] text-muted-foreground">
             Suporta markdown completo. Imagens via <code>![alt](url)</code>.
+          </span>
+        </Field>
+      )}
+
+      {chartType === "metric" && (
+        <Field label={`Tamanho do valor (${Math.round(valueScale * 100)}%)`}>
+          <input
+            type="range"
+            min={0.5}
+            max={6}
+            step={0.25}
+            value={valueScale}
+            onChange={(e) => setValueScale(Number(e.target.value))}
+            className="w-full accent-[var(--primary)]"
+          />
+          <span className="mt-1 block text-[11px] text-muted-foreground">
+            Aumente para destacar o número em telas grandes ou no modo TV.
           </span>
         </Field>
       )}
