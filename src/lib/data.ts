@@ -328,7 +328,7 @@ export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
     "Dashboard de referência com exemplos de cada tipo de widget, incluindo cards de texto/markdown e divisórias.",
   );
 
-  const items: Array<Omit<Widget, "id" | "dashboardId" | "valueScale" | "alertRule"> & { valueScale?: number; alertRule?: AlertRule }> = [
+  const items: Array<Omit<Widget, "id" | "dashboardId" | "valueScale" | "alertRule" | "drilldown"> & { valueScale?: number; alertRule?: AlertRule; drilldown?: DrilldownConfig }> = [
     { connectionId: null, title: "Visão geral", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 0, w: 12, h: 1 }, content: null },
     { connectionId: null, title: "Tickets em aberto", chartType: "metric", preset: "tickets_open", refreshInterval: 60, position: { x: 0, y: 1, w: 3, h: 2 }, content: null },
     { connectionId: null, title: "Tickets resolvidos", chartType: "metric", preset: "tickets_solved", refreshInterval: 60, position: { x: 3, y: 1, w: 3, h: 2 }, content: null },
