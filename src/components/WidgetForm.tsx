@@ -177,6 +177,7 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
             chartType={chartType}
             suffix={presetId === "sla_compliance" ? "%" : undefined}
             content={content}
+            valueScale={valueScale}
           />
         </div>
       </div>
