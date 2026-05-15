@@ -117,6 +117,12 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
                     </button>
                   </div>
                 )}
+                {w.chartType === "metric" && onAlertRuleChange && (
+                  <WidgetAlertDialog
+                    rule={w.alertRule}
+                    onChange={(rule) => onAlertRuleChange(w.id, rule)}
+                  />
+                )}
                 {onRemove && (
                   <button
                     onClick={() => onRemove(w.id)}
@@ -137,6 +143,7 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
               suffix={w.preset === "sla_compliance" ? "%" : undefined}
               content={w.content}
               valueScale={w.valueScale}
+              alertRule={w.alertRule}
               bare
             />
           </div>
