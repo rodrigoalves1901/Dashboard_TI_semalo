@@ -12,6 +12,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Compass,
+  Tv,
+  PlayCircle,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,6 +31,8 @@ import {
 
 const nav = [
   { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true },
+  { to: "/app/tv", label: "Modo TV", icon: Tv },
+  { to: "/app/slideshow", label: "Slideshow", icon: PlayCircle },
   { to: "/app/connections", label: "Conexões", icon: Database },
   { to: "/app/explorer", label: "Explorer", icon: Compass },
   { to: "/app/settings", label: "Configurações", icon: Settings },
