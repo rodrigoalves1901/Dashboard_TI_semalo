@@ -13,6 +13,8 @@ type Props = {
   hideChrome?: boolean;
   /** Initial font/zoom scale (1 = 100%). */
   initialScale?: number;
+  /** Forwarded to WidgetGrid so the slideshow can pause while drilldown is open. */
+  onDrilldownOpenChange?: (open: boolean) => void;
 };
 
 const SCALE_KEY = "flup.fullscreenScale";
@@ -23,6 +25,7 @@ export function FullscreenDashboard({
   onExit,
   hideChrome = false,
   initialScale,
+  onDrilldownOpenChange,
 }: Props) {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
@@ -197,7 +200,7 @@ export function FullscreenDashboard({
               ["zoom" as never]: scale,
             }}
           >
-            <WidgetGrid key={refreshKey} widgets={widgets} editable={false} />
+            <WidgetGrid key={refreshKey} widgets={widgets} editable={false} onDrilldownOpenChange={onDrilldownOpenChange} />
           </div>
         )}
       </div>

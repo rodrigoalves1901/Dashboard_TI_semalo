@@ -278,6 +278,17 @@ function DashboardEditor() {
                   toast.error((err as Error).message);
                 }
               }}
+              connections={conns}
+              dashboards={allDashboards}
+              onDrilldownChange={async (wid, drilldown) => {
+                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, drilldown } : w)));
+                try {
+                  await updateWidgetDrilldown(wid, drilldown);
+                  toast.success(drilldown ? "Ação de clique salva" : "Ação removida", { duration: 1200 });
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
             />
           )}
         </section>
