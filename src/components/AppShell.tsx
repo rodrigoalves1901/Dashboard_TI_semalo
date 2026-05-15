@@ -16,6 +16,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "./ThemeToggle";
+import { MobileBottomNav } from "./MobileBottomNav";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -197,9 +198,38 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Plus size={14} /> Nova conexão
           </Link>
+          {/* Mobile user menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Menu do usuário"
+              className="md:hidden grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-foreground text-xs font-bold"
+            >
+              {user?.name.slice(0, 1).toUpperCase()}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="truncate text-[12px] font-bold">{user?.name}</div>
+                <div className="truncate text-[11px] font-normal text-muted-foreground">{user?.email}</div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
+                Organização
+              </DropdownMenuLabel>
+              {orgs.map((o) => (
+                <DropdownMenuItem key={o.id} onClick={() => switchOrg(o.id)}>
+                  {o.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut}>
+                <LogOut size={14} className="mr-2" /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-6 lg:p-8 pb-24 md:pb-8">{children}</main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
