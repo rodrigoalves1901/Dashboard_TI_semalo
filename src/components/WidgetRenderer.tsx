@@ -50,9 +50,13 @@ type Props = {
   content?: string | null;
   valueScale?: number;
   alertRule?: AlertRule;
+  /** When set, the widget is interactive — fires on click (or chart slice click). */
+  onDrilldown?: (slice?: { name: string; value: number }) => void;
 };
 
-export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale, alertRule }: Props) {
+export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale, alertRule, onDrilldown }: Props) {
+  const clickable = !!onDrilldown;
+  const handleCardClick = () => onDrilldown?.();
   if (chartType === "divider") {
     return (
       <div className="flex h-full w-full items-center gap-3 px-2">
