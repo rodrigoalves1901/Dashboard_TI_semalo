@@ -239,3 +239,25 @@
 .react-resizable-handle::after {
   border-color: var(--primary) !important;
 }
+
+/* ===== Alert states for metric cards ===== */
+@keyframes alert-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.alert-blink {
+  animation: alert-pulse 1.1s ease-in-out infinite;
+}
+.alert-warning {
+  background: color-mix(in oklab, var(--warning) 18%, var(--card));
+  border-color: var(--warning) !important;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--warning) 35%, transparent);
+}
+.alert-warning .alert-value { color: var(--warning); }
+.alert-critical {
+  background: color-mix(in oklab, var(--destructive) 22%, var(--card));
+  border-color: var(--destructive) !important;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--destructive) 45%, transparent);
+}
+.alert-critical .alert-value,
+.alert-critical .alert-label { color: var(--destructive); }

@@ -19,6 +19,7 @@ import {
 import { mockData, type PresetId } from "@/lib/glpi-presets";
 import { MetricCard } from "./MetricCard";
 import type { ChartType } from "@/lib/data";
+import { evaluateAlert, type AlertRule } from "@/lib/alert-rule";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -48,9 +49,10 @@ type Props = {
   bare?: boolean;
   content?: string | null;
   valueScale?: number;
+  alertRule?: AlertRule;
 };
 
-export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale }: Props) {
+export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale, alertRule }: Props) {
   if (chartType === "divider") {
     return (
       <div className="flex h-full w-full items-center gap-3 px-2">
@@ -81,7 +83,19 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
     : "rounded-[14px] border border-border bg-card p-5 shadow-card";
 
   if (chartType === "metric" && data.value !== undefined) {
-    return <MetricCard label={title} value={data.value} delta={data.delta} suffix={suffix} bare={bare} valueScale={valueScale} />;
+    const level = evaluateAlert(data.value, alertRule ?? null);
+    return (
+      <MetricCard
+        label={title}
+        value={data.value}
+        delta={data.delta}
+        suffix={suffix}
+        bare={bare}
+        valueScale={valueScale}
+        alertLevel={level}
+        alertBlink={!!alertRule?.blink}
+      />
+    );
   }
 
   if (chartType === "table" && data.series) {
