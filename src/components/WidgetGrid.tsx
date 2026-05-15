@@ -87,15 +87,43 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
                 <GripVertical size={14} />
                 <span>arraste</span>
               </div>
-              {onRemove && (
-                <button
-                  onClick={() => onRemove(w.id)}
-                  aria-label="Remover widget"
-                  className="absolute right-2 top-1 z-20 grid h-6 w-6 place-items-center rounded-md bg-card text-destructive shadow-sm hover:bg-destructive/10"
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
+              <div className="absolute right-2 top-1 z-20 flex items-center gap-1">
+                {w.chartType === "metric" && onValueScaleChange && (
+                  <div
+                    className="flex items-center gap-0.5 rounded-md border border-border bg-card px-1 shadow-sm"
+                    title="Tamanho do valor"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onValueScaleChange(w.id, Math.max(0.5, +(w.valueScale - 0.25).toFixed(2)))}
+                      className="grid h-6 w-6 place-items-center rounded text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      aria-label="Diminuir tamanho do valor"
+                    >
+                      <Type size={11} />−
+                    </button>
+                    <span className="px-1 text-[10px] tabular-nums text-muted-foreground">
+                      {Math.round(w.valueScale * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onValueScaleChange(w.id, Math.min(6, +(w.valueScale + 0.25).toFixed(2)))}
+                      className="grid h-6 w-6 place-items-center rounded text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      aria-label="Aumentar tamanho do valor"
+                    >
+                      <Type size={13} />+
+                    </button>
+                  </div>
+                )}
+                {onRemove && (
+                  <button
+                    onClick={() => onRemove(w.id)}
+                    aria-label="Remover widget"
+                    className="grid h-6 w-6 place-items-center rounded-md bg-card text-destructive shadow-sm hover:bg-destructive/10"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
             </>
           )}
           <div className={`h-full w-full overflow-hidden ${editable ? "pt-8" : ""}`}>
@@ -105,6 +133,7 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
               chartType={w.chartType}
               suffix={w.preset === "sla_compliance" ? "%" : undefined}
               content={w.content}
+              valueScale={w.valueScale}
               bare
             />
           </div>
