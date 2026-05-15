@@ -25,7 +25,9 @@ type Props = {
 const COLS = 12;
 
 function defaultPosition(w: Widget, i: number): LayoutItem {
-  if (w.position) return { i: w.id, ...w.position, minW: 2, minH: 2 };
+  if (w.position) return { i: w.id, ...w.position, minW: 1, minH: 1 };
+  if (w.chartType === "divider") return { i: w.id, x: 0, y: i * 1, w: 12, h: 1, minW: 2, minH: 1 };
+  if (w.chartType === "markdown") return { i: w.id, x: 0, y: i * 3, w: 12, h: 3, minW: 3, minH: 2 };
   if (w.chartType === "metric") return { i: w.id, x: (i * 3) % 12, y: 0, w: 3, h: 2, minW: 2, minH: 2 };
   if (w.chartType === "table") return { i: w.id, x: 0, y: i * 4, w: 12, h: 5, minW: 3, minH: 3 };
   return { i: w.id, x: (i * 6) % 12, y: 100, w: 6, h: 4, minW: 3, minH: 3 };
@@ -101,6 +103,7 @@ export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemo
               presetId={w.preset as PresetId}
               chartType={w.chartType}
               suffix={w.preset === "sla_compliance" ? "%" : undefined}
+              content={w.content}
               bare
             />
           </div>
