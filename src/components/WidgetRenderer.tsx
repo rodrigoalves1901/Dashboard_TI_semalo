@@ -88,7 +88,7 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
 
   if (chartType === "metric" && data.value !== undefined) {
     const level = evaluateAlert(data.value, alertRule ?? null);
-    return (
+    const card = (
       <MetricCard
         label={title}
         value={data.value}
@@ -99,6 +99,17 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
         alertLevel={level}
         alertBlink={!!alertRule?.blink}
       />
+    );
+    if (!clickable) return card;
+    return (
+      <button
+        type="button"
+        onClick={handleCardClick}
+        className="group block h-full w-full text-left transition-transform hover:scale-[1.005] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        title="Clique para ver detalhes"
+      >
+        {card}
+      </button>
     );
   }
 
@@ -118,7 +129,15 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
             </thead>
             <tbody>
               {data.series.map((r) => (
-                <tr key={r.name} className="border-t border-border-soft">
+                <tr
+                  key={r.name}
+                  onClick={clickable ? () => onDrilldown?.({ name: r.name, value: r.value }) : undefined}
+                  className={
+                    clickable
+                      ? "cursor-pointer border-t border-border-soft hover:bg-secondary/60"
+                      : "border-t border-border-soft"
+                  }
+                >
                   <td className="px-3 py-2 text-foreground">{r.name}</td>
                   <td className="px-3 py-2 text-right font-semibold">{r.value}</td>
                 </tr>
