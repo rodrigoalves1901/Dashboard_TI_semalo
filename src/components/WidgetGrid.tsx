@@ -2,8 +2,10 @@ import { useMemo } from "react";
 import GridLayout, { WidthProvider, type Layout } from "react-grid-layout/legacy";
 import { Trash2, GripVertical, Type } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
+import { WidgetAlertDialog } from "./WidgetAlertDialog";
 import type { Widget } from "@/lib/data";
 import type { PresetId } from "@/lib/glpi-presets";
+import type { AlertRule } from "@/lib/alert-rule";
 
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -21,6 +23,7 @@ type Props = {
   onCommit?: (positions: Record<string, Pos>) => void;
   onRemove?: (id: string) => void;
   onValueScaleChange?: (id: string, scale: number) => void;
+  onAlertRuleChange?: (id: string, rule: AlertRule) => void;
 };
 
 const COLS = 12;
@@ -34,7 +37,7 @@ function defaultPosition(w: Widget, i: number): LayoutItem {
   return { i: w.id, x: (i * 6) % 12, y: 100, w: 6, h: 4, minW: 3, minH: 3 };
 }
 
-export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemove, onValueScaleChange }: Props) {
+export function WidgetGrid({ widgets, editable, onLayoutChange, onCommit, onRemove, onValueScaleChange, onAlertRuleChange }: Props) {
   const layout = useMemo<Layout>(
     () => widgets.map((w, i) => defaultPosition(w, i)),
     [widgets],
