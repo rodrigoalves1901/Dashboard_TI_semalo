@@ -224,7 +224,7 @@ export async function listWidgets(dashboardId: string): Promise<Widget[]> {
   return (data ?? []).map(mapWidget);
 }
 
-export async function createWidget(input: Omit<Widget, "id">): Promise<Widget> {
+export async function createWidget(input: Omit<Widget, "id" | "valueScale"> & { valueScale?: number }): Promise<Widget> {
   const { data, error } = await supabase
     .from("widgets")
     .insert({
