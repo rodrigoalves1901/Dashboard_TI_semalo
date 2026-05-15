@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { X, Pause, Play, SkipBack, SkipForward, ChevronDown, ChevronUp } from "lucide-react";
 import { FullscreenDashboard } from "./FullscreenDashboard";
 import type { Dashboard } from "@/lib/data";
 
