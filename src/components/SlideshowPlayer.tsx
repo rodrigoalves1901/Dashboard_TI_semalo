@@ -17,6 +17,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
   const startedAt = useRef<number>(Date.now());
 
   const current = entries[index];
