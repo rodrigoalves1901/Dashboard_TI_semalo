@@ -7,6 +7,7 @@ import {
   deleteWidget,
   updateDashboard,
   updateWidgetPosition,
+  updateWidgetValueScale,
   subscribe,
   type Connection,
   type Dashboard,
@@ -247,7 +248,22 @@ function DashboardEditor() {
               Nenhum widget ainda. Use o painel ao lado para adicionar.
             </div>
           ) : (
-            <WidgetGrid key={gridKey} widgets={widgets} editable onLayoutChange={onLayout} onCommit={onCommit} onRemove={removeWidget} />
+            <WidgetGrid
+              key={gridKey}
+              widgets={widgets}
+              editable
+              onLayoutChange={onLayout}
+              onCommit={onCommit}
+              onRemove={removeWidget}
+              onValueScaleChange={async (wid, scale) => {
+                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, valueScale: scale } : w)));
+                try {
+                  await updateWidgetValueScale(wid, scale);
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
+            />
           )}
         </section>
       </div>
