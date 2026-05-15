@@ -50,6 +50,8 @@ export type Widget = {
   refreshInterval: number;
   position: WidgetPosition | null;
   content: string | null;
+  /** Multiplier for the metric value font-size. 1 = 100%. */
+  valueScale: number;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -234,6 +236,7 @@ export async function createWidget(input: Omit<Widget, "id">): Promise<Widget> {
       refresh_interval: input.refreshInterval,
       content: input.content,
       position: input.position,
+      value_scale: input.valueScale ?? 1,
     })
     .select("*")
     .single();
@@ -257,7 +260,18 @@ export async function updateWidgetPosition(id: string, position: WidgetPosition)
   emit();
 }
 
+export async function updateWidgetValueScale(id: string, valueScale: number) {
+  const clamped = Math.min(6, Math.max(0.5, Math.round(valueScale * 100) / 100));
+  const { error } = await supabase
+    .from("widgets")
+    .update({ value_scale: clamped })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
 function mapWidget(r: any): Widget {
+  const vs = Number(r.value_scale);
   return {
     id: r.id,
     dashboardId: r.dashboard_id,
@@ -268,6 +282,7 @@ function mapWidget(r: any): Widget {
     refreshInterval: r.refresh_interval,
     position: (r.position as WidgetPosition | null) ?? null,
     content: (r.content as string | null) ?? null,
+    valueScale: Number.isFinite(vs) && vs > 0 ? vs : 1,
   };
 }
 
