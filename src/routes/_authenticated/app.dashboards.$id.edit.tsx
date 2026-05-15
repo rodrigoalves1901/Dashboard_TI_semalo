@@ -8,6 +8,7 @@ import {
   updateDashboard,
   updateWidgetPosition,
   updateWidgetValueScale,
+  updateWidgetAlertRule,
   subscribe,
   type Connection,
   type Dashboard,
@@ -259,6 +260,15 @@ function DashboardEditor() {
                 setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, valueScale: scale } : w)));
                 try {
                   await updateWidgetValueScale(wid, scale);
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
+              onAlertRuleChange={async (wid, rule) => {
+                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, alertRule: rule } : w)));
+                try {
+                  await updateWidgetAlertRule(wid, rule);
+                  toast.success(rule ? "Alerta configurado" : "Alerta removido", { duration: 1200 });
                 } catch (err) {
                   toast.error((err as Error).message);
                 }
