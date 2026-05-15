@@ -1,14 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   listDashboards,
   createDashboard,
+  createSampleDashboard,
   deleteDashboard,
   subscribe,
   type Dashboard,
 } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
-import { Plus, LayoutDashboard, MoreHorizontal, Trash2 } from "lucide-react";
+import { Plus, LayoutDashboard, MoreHorizontal, Trash2, Sparkles } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { mockData } from "@/lib/glpi-presets";
 import { toast } from "sonner";
@@ -25,8 +26,10 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 function DashboardsHome() {
   const { currentOrg, user } = useAuth();
+  const navigate = useNavigate();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +68,20 @@ function DashboardsHome() {
     }
   };
 
+  const seedSample = async () => {
+    if (!currentOrg || seeding) return;
+    setSeeding(true);
+    try {
+      const dash = await createSampleDashboard(currentOrg.id);
+      toast.success("Dashboard modelo criado");
+      navigate({ to: "/app/dashboards/$id", params: { id: dash.id } });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const remove = async (id: string) => {
     if (!confirm("Remover este dashboard?")) return;
     try {
@@ -90,12 +107,21 @@ function DashboardsHome() {
             Visão geral dos seus dashboards em <strong>{currentOrg?.name}</strong>.
           </p>
         </div>
-        <button
-          onClick={create}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          <Plus size={16} /> Novo dashboard
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={seedSample}
+            disabled={seeding}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary disabled:opacity-60"
+          >
+            <Sparkles size={16} /> {seeding ? "Criando..." : "Criar dashboard modelo"}
+          </button>
+          <button
+            onClick={create}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus size={16} /> Novo dashboard
+          </button>
+        </div>
       </header>
 
       <section>
