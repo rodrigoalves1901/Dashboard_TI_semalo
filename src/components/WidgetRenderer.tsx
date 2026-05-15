@@ -19,6 +19,7 @@ import {
 import { mockData, type PresetId } from "@/lib/glpi-presets";
 import { MetricCard } from "./MetricCard";
 import type { ChartType } from "@/lib/data";
+import { evaluateAlert, type AlertRule } from "@/lib/alert-rule";
 
 const CHART_COLORS = [
   "var(--chart-1)",
