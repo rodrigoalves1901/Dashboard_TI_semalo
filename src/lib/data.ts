@@ -227,7 +227,9 @@ export async function listWidgets(dashboardId: string): Promise<Widget[]> {
   return (data ?? []).map(mapWidget);
 }
 
-export async function createWidget(input: Omit<Widget, "id" | "valueScale"> & { valueScale?: number }): Promise<Widget> {
+export async function createWidget(
+  input: Omit<Widget, "id" | "valueScale" | "alertRule"> & { valueScale?: number; alertRule?: AlertRule },
+): Promise<Widget> {
   const { data, error } = await supabase
     .from("widgets")
     .insert({
@@ -240,6 +242,7 @@ export async function createWidget(input: Omit<Widget, "id" | "valueScale"> & { 
       content: input.content,
       position: input.position,
       value_scale: input.valueScale ?? 1,
+      alert_rule: input.alertRule ?? null,
     })
     .select("*")
     .single();
