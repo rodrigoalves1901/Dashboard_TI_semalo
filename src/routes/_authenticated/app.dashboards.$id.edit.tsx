@@ -4,11 +4,13 @@ import {
   getDashboard,
   listWidgets,
   listConnections,
+  listDashboards,
   deleteWidget,
   updateDashboard,
   updateWidgetPosition,
   updateWidgetValueScale,
   updateWidgetAlertRule,
+  updateWidgetDrilldown,
   subscribe,
   type Connection,
   type Dashboard,
@@ -31,6 +33,7 @@ function DashboardEditor() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [conns, setConns] = useState<Connection[]>([]);
+  const [allDashboards, setAllDashboards] = useState<Dashboard[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
   const [saving, setSaving] = useState(false);
@@ -44,15 +47,17 @@ function DashboardEditor() {
     let cancelled = false;
     const refresh = async () => {
       try {
-        const [d, ws, cs] = await Promise.all([
+        const [d, ws, cs, ds] = await Promise.all([
           getDashboard(id),
           listWidgets(id),
           currentOrg ? listConnections(currentOrg.id) : Promise.resolve([] as Connection[]),
+          currentOrg ? listDashboards(currentOrg.id) : Promise.resolve([] as Dashboard[]),
         ]);
         if (cancelled) return;
         setDashboard(d);
         setWidgets(ws);
         setConns(cs);
+        setAllDashboards(ds);
         if (!baselineRef.current) {
           const snap: Record<string, { x: number; y: number; w: number; h: number }> = {};
           for (const w of ws) if (w.position) snap[w.id] = { ...w.position };
@@ -269,6 +274,17 @@ function DashboardEditor() {
                 try {
                   await updateWidgetAlertRule(wid, rule);
                   toast.success(rule ? "Alerta configurado" : "Alerta removido", { duration: 1200 });
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
+              connections={conns}
+              dashboards={allDashboards}
+              onDrilldownChange={async (wid, drilldown) => {
+                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, drilldown } : w)));
+                try {
+                  await updateWidgetDrilldown(wid, drilldown);
+                  toast.success(drilldown ? "Ação de clique salva" : "Ação removida", { duration: 1200 });
                 } catch (err) {
                   toast.error((err as Error).message);
                 }

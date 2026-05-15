@@ -50,9 +50,13 @@ type Props = {
   content?: string | null;
   valueScale?: number;
   alertRule?: AlertRule;
+  /** When set, the widget is interactive — fires on click (or chart slice click). */
+  onDrilldown?: (slice?: { name: string; value: number }) => void;
 };
 
-export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale, alertRule }: Props) {
+export function WidgetRenderer({ title, presetId, chartType, suffix, bare, content, valueScale, alertRule, onDrilldown }: Props) {
+  const clickable = !!onDrilldown;
+  const handleCardClick = () => onDrilldown?.();
   if (chartType === "divider") {
     return (
       <div className="flex h-full w-full items-center gap-3 px-2">
@@ -84,7 +88,7 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
 
   if (chartType === "metric" && data.value !== undefined) {
     const level = evaluateAlert(data.value, alertRule ?? null);
-    return (
+    const card = (
       <MetricCard
         label={title}
         value={data.value}
@@ -95,6 +99,17 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
         alertLevel={level}
         alertBlink={!!alertRule?.blink}
       />
+    );
+    if (!clickable) return card;
+    return (
+      <button
+        type="button"
+        onClick={handleCardClick}
+        className="group block h-full w-full text-left transition-transform hover:scale-[1.005] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        title="Clique para ver detalhes"
+      >
+        {card}
+      </button>
     );
   }
 
@@ -114,7 +129,15 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
             </thead>
             <tbody>
               {data.series.map((r) => (
-                <tr key={r.name} className="border-t border-border-soft">
+                <tr
+                  key={r.name}
+                  onClick={clickable ? () => onDrilldown?.({ name: r.name, value: r.value }) : undefined}
+                  className={
+                    clickable
+                      ? "cursor-pointer border-t border-border-soft hover:bg-secondary/60"
+                      : "border-t border-border-soft"
+                  }
+                >
                   <td className="px-3 py-2 text-foreground">{r.name}</td>
                   <td className="px-3 py-2 text-right font-semibold">{r.value}</td>
                 </tr>
@@ -139,7 +162,17 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
               <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)" }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="var(--chart-1)" />
+              <Bar
+                dataKey="value"
+                radius={[4, 4, 0, 0]}
+                fill="var(--chart-1)"
+                cursor={clickable ? "pointer" : undefined}
+                onClick={
+                  clickable
+                    ? (d: any) => onDrilldown?.({ name: String(d?.name ?? ""), value: Number(d?.value ?? 0) })
+                    : undefined
+                }
+              />
             </BarChart>
           ) : chartType === "line" && data.timeSeries ? (
             <LineChart data={data.timeSeries} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -162,6 +195,12 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
                 paddingAngle={2}
                 stroke="var(--card)"
                 strokeWidth={2}
+                cursor={clickable ? "pointer" : undefined}
+                onClick={
+                  clickable
+                    ? (d: any) => onDrilldown?.({ name: String(d?.name ?? ""), value: Number(d?.value ?? 0) })
+                    : undefined
+                }
               >
                 {data.series.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />

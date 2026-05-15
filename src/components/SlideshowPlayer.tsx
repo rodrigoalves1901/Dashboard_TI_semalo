@@ -16,9 +16,11 @@ type Props = {
 export function SlideshowPlayer({ entries, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
   const startedAt = useRef<number>(Date.now());
+  const autoPaused = paused || drilldownOpen;
 
   const current = entries[index];
   const totalMs = (current?.seconds ?? 30) * 1000;
@@ -31,7 +33,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
 
   // Tick
   useEffect(() => {
-    if (paused || entries.length === 0) return;
+    if (autoPaused || entries.length === 0) return;
     const id = setInterval(() => {
       const e = Date.now() - startedAt.current;
       if (e >= totalMs) {
@@ -41,13 +43,13 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
       }
     }, 100);
     return () => clearInterval(id);
-  }, [paused, totalMs, entries.length, index]);
+  }, [autoPaused, totalMs, entries.length, index]);
 
   // Pause adjusts startedAt to keep elapsed correct on resume
   useEffect(() => {
-    if (paused) return;
+    if (autoPaused) return;
     startedAt.current = Date.now() - elapsedMs;
-  }, [paused]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoPaused]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = () => setIndex((i) => (i + 1) % entries.length);
   const prev = () => setIndex((i) => (i - 1 + entries.length) % entries.length);
@@ -83,6 +85,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
         dashboardId={current.dashboard.id}
         intervalSeconds={0}
         hideChrome
+        onDrilldownOpenChange={setDrilldownOpen}
       />
       {/* Top progress bar (slideshow) */}
       <div className="fixed top-0 left-0 right-0 z-[120] h-1 bg-border/40">

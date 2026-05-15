@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { createOrgOnServer } from "@/lib/orgs.functions";
 import type { AlertRule } from "@/lib/alert-rule";
+import type { DrilldownConfig } from "@/lib/drilldown";
 
 export type Org = {
   id: string;
@@ -55,6 +56,8 @@ export type Widget = {
   valueScale: number;
   /** Optional alert thresholds for metric widgets. */
   alertRule: AlertRule;
+  /** Optional click action: open detail table or navigate to another dashboard. */
+  drilldown: DrilldownConfig;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -228,7 +231,11 @@ export async function listWidgets(dashboardId: string): Promise<Widget[]> {
 }
 
 export async function createWidget(
-  input: Omit<Widget, "id" | "valueScale" | "alertRule"> & { valueScale?: number; alertRule?: AlertRule },
+  input: Omit<Widget, "id" | "valueScale" | "alertRule" | "drilldown"> & {
+    valueScale?: number;
+    alertRule?: AlertRule;
+    drilldown?: DrilldownConfig;
+  },
 ): Promise<Widget> {
   const { data, error } = await supabase
     .from("widgets")
@@ -243,6 +250,7 @@ export async function createWidget(
       position: input.position,
       value_scale: input.valueScale ?? 1,
       alert_rule: input.alertRule ?? null,
+      drilldown: input.drilldown ?? null,
     })
     .select("*")
     .single();
@@ -285,6 +293,15 @@ export async function updateWidgetAlertRule(id: string, rule: AlertRule) {
   emit();
 }
 
+export async function updateWidgetDrilldown(id: string, drilldown: DrilldownConfig) {
+  const { error } = await supabase
+    .from("widgets")
+    .update({ drilldown })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
 function mapWidget(r: any): Widget {
   const vs = Number(r.value_scale);
   return {
@@ -299,6 +316,7 @@ function mapWidget(r: any): Widget {
     content: (r.content as string | null) ?? null,
     valueScale: Number.isFinite(vs) && vs > 0 ? vs : 1,
     alertRule: (r.alert_rule as AlertRule) ?? null,
+    drilldown: (r.drilldown as DrilldownConfig) ?? null,
   };
 }
 
@@ -310,7 +328,7 @@ export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
     "Dashboard de referência com exemplos de cada tipo de widget, incluindo cards de texto/markdown e divisórias.",
   );
 
-  const items: Array<Omit<Widget, "id" | "dashboardId" | "valueScale" | "alertRule"> & { valueScale?: number; alertRule?: AlertRule }> = [
+  const items: Array<Omit<Widget, "id" | "dashboardId" | "valueScale" | "alertRule" | "drilldown"> & { valueScale?: number; alertRule?: AlertRule; drilldown?: DrilldownConfig }> = [
     { connectionId: null, title: "Visão geral", chartType: "divider", preset: "", refreshInterval: 0, position: { x: 0, y: 0, w: 12, h: 1 }, content: null },
     { connectionId: null, title: "Tickets em aberto", chartType: "metric", preset: "tickets_open", refreshInterval: 60, position: { x: 0, y: 1, w: 3, h: 2 }, content: null },
     { connectionId: null, title: "Tickets resolvidos", chartType: "metric", preset: "tickets_solved", refreshInterval: 60, position: { x: 3, y: 1, w: 3, h: 2 }, content: null },
