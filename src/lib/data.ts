@@ -1,6 +1,7 @@
 // Supabase-backed data layer for orgs, connections, dashboards, widgets.
 import { supabase } from "@/integrations/supabase/client";
 import { createOrgOnServer } from "@/lib/orgs.functions";
+import type { AlertRule } from "@/lib/alert-rule";
 
 export type Org = {
   id: string;
@@ -52,6 +53,8 @@ export type Widget = {
   content: string | null;
   /** Multiplier for the metric value font-size. 1 = 100%. */
   valueScale: number;
+  /** Optional alert thresholds for metric widgets. */
+  alertRule: AlertRule;
 };
 
 // ---------- Tiny refresh emitter ----------
@@ -270,6 +273,15 @@ export async function updateWidgetValueScale(id: string, valueScale: number) {
   emit();
 }
 
+export async function updateWidgetAlertRule(id: string, rule: AlertRule) {
+  const { error } = await supabase
+    .from("widgets")
+    .update({ alert_rule: rule })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
 function mapWidget(r: any): Widget {
   const vs = Number(r.value_scale);
   return {
@@ -283,6 +295,7 @@ function mapWidget(r: any): Widget {
     position: (r.position as WidgetPosition | null) ?? null,
     content: (r.content as string | null) ?? null,
     valueScale: Number.isFinite(vs) && vs > 0 ? vs : 1,
+    alertRule: (r.alert_rule as AlertRule) ?? null,
   };
 }
 
