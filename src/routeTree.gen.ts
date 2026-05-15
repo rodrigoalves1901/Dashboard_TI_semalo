@@ -19,9 +19,15 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppExplorerRouteImport } from './routes/_authenticated/app.explorer'
 import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
+import { Route as AuthenticatedAppTvIndexRouteImport } from './routes/_authenticated/app.tv.index'
+import { Route as AuthenticatedAppSlideshowIndexRouteImport } from './routes/_authenticated/app.slideshow.index'
 import { Route as AuthenticatedAppConnectionsIndexRouteImport } from './routes/_authenticated/app.connections.index'
+import { Route as AuthenticatedAppTvIdRouteImport } from './routes/_authenticated/app.tv.$id'
+import { Route as AuthenticatedAppSlideshowNewRouteImport } from './routes/_authenticated/app.slideshow.new'
 import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
 import { Route as AuthenticatedAppConnectionsNewRouteImport } from './routes/_authenticated/app.connections.new'
+import { Route as AuthenticatedAppSlideshowIdPlayRouteImport } from './routes/_authenticated/app.slideshow.$id.play'
+import { Route as AuthenticatedAppSlideshowIdEditRouteImport } from './routes/_authenticated/app.slideshow.$id.edit'
 import { Route as AuthenticatedAppDashboardsIdEditRouteImport } from './routes/_authenticated/app.dashboards.$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
@@ -76,11 +82,33 @@ const AuthenticatedAppConnectionsRoute =
     path: '/app/connections',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppTvIndexRoute = AuthenticatedAppTvIndexRouteImport.update({
+  id: '/app/tv/',
+  path: '/app/tv/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppSlideshowIndexRoute =
+  AuthenticatedAppSlideshowIndexRouteImport.update({
+    id: '/app/slideshow/',
+    path: '/app/slideshow/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppConnectionsIndexRoute =
   AuthenticatedAppConnectionsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedAppConnectionsRoute,
+  } as any)
+const AuthenticatedAppTvIdRoute = AuthenticatedAppTvIdRouteImport.update({
+  id: '/app/tv/$id',
+  path: '/app/tv/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppSlideshowNewRoute =
+  AuthenticatedAppSlideshowNewRouteImport.update({
+    id: '/app/slideshow/new',
+    path: '/app/slideshow/new',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppDashboardsIdRoute =
   AuthenticatedAppDashboardsIdRouteImport.update({
@@ -93,6 +121,18 @@ const AuthenticatedAppConnectionsNewRoute =
     id: '/new',
     path: '/new',
     getParentRoute: () => AuthenticatedAppConnectionsRoute,
+  } as any)
+const AuthenticatedAppSlideshowIdPlayRoute =
+  AuthenticatedAppSlideshowIdPlayRouteImport.update({
+    id: '/app/slideshow/$id/play',
+    path: '/app/slideshow/$id/play',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppSlideshowIdEditRoute =
+  AuthenticatedAppSlideshowIdEditRouteImport.update({
+    id: '/app/slideshow/$id/edit',
+    path: '/app/slideshow/$id/edit',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppDashboardsIdEditRoute =
   AuthenticatedAppDashboardsIdEditRouteImport.update({
@@ -113,8 +153,14 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
+  '/app/tv/$id': typeof AuthenticatedAppTvIdRoute
   '/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
+  '/app/slideshow/': typeof AuthenticatedAppSlideshowIndexRoute
+  '/app/tv/': typeof AuthenticatedAppTvIndexRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
+  '/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
+  '/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -127,8 +173,14 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
+  '/app/tv/$id': typeof AuthenticatedAppTvIdRoute
   '/app/connections': typeof AuthenticatedAppConnectionsIndexRoute
+  '/app/slideshow': typeof AuthenticatedAppSlideshowIndexRoute
+  '/app/tv': typeof AuthenticatedAppTvIndexRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
+  '/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
+  '/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -144,8 +196,14 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/_authenticated/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  '/_authenticated/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
+  '/_authenticated/app/tv/$id': typeof AuthenticatedAppTvIdRoute
   '/_authenticated/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
+  '/_authenticated/app/slideshow/': typeof AuthenticatedAppSlideshowIndexRoute
+  '/_authenticated/app/tv/': typeof AuthenticatedAppTvIndexRoute
   '/_authenticated/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
+  '/_authenticated/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
+  '/_authenticated/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,8 +219,14 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/connections/new'
     | '/app/dashboards/$id'
+    | '/app/slideshow/new'
+    | '/app/tv/$id'
     | '/app/connections/'
+    | '/app/slideshow/'
+    | '/app/tv/'
     | '/app/dashboards/$id/edit'
+    | '/app/slideshow/$id/edit'
+    | '/app/slideshow/$id/play'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -175,8 +239,14 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/connections/new'
     | '/app/dashboards/$id'
+    | '/app/slideshow/new'
+    | '/app/tv/$id'
     | '/app/connections'
+    | '/app/slideshow'
+    | '/app/tv'
     | '/app/dashboards/$id/edit'
+    | '/app/slideshow/$id/edit'
+    | '/app/slideshow/$id/play'
   id:
     | '__root__'
     | '/'
@@ -191,8 +261,14 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/connections/new'
     | '/_authenticated/app/dashboards/$id'
+    | '/_authenticated/app/slideshow/new'
+    | '/_authenticated/app/tv/$id'
     | '/_authenticated/app/connections/'
+    | '/_authenticated/app/slideshow/'
+    | '/_authenticated/app/tv/'
     | '/_authenticated/app/dashboards/$id/edit'
+    | '/_authenticated/app/slideshow/$id/edit'
+    | '/_authenticated/app/slideshow/$id/play'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -276,12 +352,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/tv/': {
+      id: '/_authenticated/app/tv/'
+      path: '/app/tv'
+      fullPath: '/app/tv/'
+      preLoaderRoute: typeof AuthenticatedAppTvIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/slideshow/': {
+      id: '/_authenticated/app/slideshow/'
+      path: '/app/slideshow'
+      fullPath: '/app/slideshow/'
+      preLoaderRoute: typeof AuthenticatedAppSlideshowIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/connections/': {
       id: '/_authenticated/app/connections/'
       path: '/'
       fullPath: '/app/connections/'
       preLoaderRoute: typeof AuthenticatedAppConnectionsIndexRouteImport
       parentRoute: typeof AuthenticatedAppConnectionsRoute
+    }
+    '/_authenticated/app/tv/$id': {
+      id: '/_authenticated/app/tv/$id'
+      path: '/app/tv/$id'
+      fullPath: '/app/tv/$id'
+      preLoaderRoute: typeof AuthenticatedAppTvIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/slideshow/new': {
+      id: '/_authenticated/app/slideshow/new'
+      path: '/app/slideshow/new'
+      fullPath: '/app/slideshow/new'
+      preLoaderRoute: typeof AuthenticatedAppSlideshowNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/dashboards/$id': {
       id: '/_authenticated/app/dashboards/$id'
@@ -296,6 +400,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/connections/new'
       preLoaderRoute: typeof AuthenticatedAppConnectionsNewRouteImport
       parentRoute: typeof AuthenticatedAppConnectionsRoute
+    }
+    '/_authenticated/app/slideshow/$id/play': {
+      id: '/_authenticated/app/slideshow/$id/play'
+      path: '/app/slideshow/$id/play'
+      fullPath: '/app/slideshow/$id/play'
+      preLoaderRoute: typeof AuthenticatedAppSlideshowIdPlayRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/slideshow/$id/edit': {
+      id: '/_authenticated/app/slideshow/$id/edit'
+      path: '/app/slideshow/$id/edit'
+      fullPath: '/app/slideshow/$id/edit'
+      preLoaderRoute: typeof AuthenticatedAppSlideshowIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/dashboards/$id/edit': {
       id: '/_authenticated/app/dashboards/$id/edit'
@@ -345,6 +463,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
+  AuthenticatedAppSlideshowNewRoute: typeof AuthenticatedAppSlideshowNewRoute
+  AuthenticatedAppTvIdRoute: typeof AuthenticatedAppTvIdRoute
+  AuthenticatedAppSlideshowIndexRoute: typeof AuthenticatedAppSlideshowIndexRoute
+  AuthenticatedAppTvIndexRoute: typeof AuthenticatedAppTvIndexRoute
+  AuthenticatedAppSlideshowIdEditRoute: typeof AuthenticatedAppSlideshowIdEditRoute
+  AuthenticatedAppSlideshowIdPlayRoute: typeof AuthenticatedAppSlideshowIdPlayRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -355,6 +479,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppDashboardsIdRoute:
     AuthenticatedAppDashboardsIdRouteWithChildren,
+  AuthenticatedAppSlideshowNewRoute: AuthenticatedAppSlideshowNewRoute,
+  AuthenticatedAppTvIdRoute: AuthenticatedAppTvIdRoute,
+  AuthenticatedAppSlideshowIndexRoute: AuthenticatedAppSlideshowIndexRoute,
+  AuthenticatedAppTvIndexRoute: AuthenticatedAppTvIndexRoute,
+  AuthenticatedAppSlideshowIdEditRoute: AuthenticatedAppSlideshowIdEditRoute,
+  AuthenticatedAppSlideshowIdPlayRoute: AuthenticatedAppSlideshowIdPlayRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

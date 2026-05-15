@@ -323,6 +323,117 @@ export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
   return dash;
 }
 
+// ---------- Slideshows ----------
+export type Slideshow = {
+  id: string;
+  orgId: string;
+  name: string;
+  defaultSeconds: number;
+  createdAt: string;
+};
+
+export type SlideshowItem = {
+  id: string;
+  slideshowId: string;
+  dashboardId: string;
+  position: number;
+  seconds: number;
+};
+
+function mapSlideshow(r: any): Slideshow {
+  return {
+    id: r.id,
+    orgId: r.org_id,
+    name: r.name,
+    defaultSeconds: r.default_seconds,
+    createdAt: r.created_at,
+  };
+}
+
+function mapSlideshowItem(r: any): SlideshowItem {
+  return {
+    id: r.id,
+    slideshowId: r.slideshow_id,
+    dashboardId: r.dashboard_id,
+    position: r.position,
+    seconds: r.seconds,
+  };
+}
+
+export async function listSlideshows(orgId: string): Promise<Slideshow[]> {
+  const { data, error } = await supabase
+    .from("slideshows")
+    .select("*")
+    .eq("org_id", orgId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapSlideshow);
+}
+
+export async function getSlideshow(id: string): Promise<Slideshow | null> {
+  const { data, error } = await supabase.from("slideshows").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapSlideshow(data) : null;
+}
+
+export async function listSlideshowItems(slideshowId: string): Promise<SlideshowItem[]> {
+  const { data, error } = await supabase
+    .from("slideshow_items")
+    .select("*")
+    .eq("slideshow_id", slideshowId)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapSlideshowItem);
+}
+
+export async function createSlideshow(orgId: string, name: string, defaultSeconds = 30): Promise<Slideshow> {
+  const { data, error } = await supabase
+    .from("slideshows")
+    .insert({ org_id: orgId, name, default_seconds: defaultSeconds })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  emit();
+  return mapSlideshow(data);
+}
+
+export async function updateSlideshow(id: string, patch: Partial<Pick<Slideshow, "name" | "defaultSeconds">>) {
+  const payload: any = {};
+  if (patch.name !== undefined) payload.name = patch.name;
+  if (patch.defaultSeconds !== undefined) payload.default_seconds = patch.defaultSeconds;
+  const { error } = await supabase.from("slideshows").update(payload).eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
+export async function deleteSlideshow(id: string) {
+  const { error } = await supabase.from("slideshows").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  emit();
+}
+
+export async function setSlideshowItems(
+  slideshowId: string,
+  items: Array<{ dashboardId: string; seconds: number }>,
+) {
+  const { error: delErr } = await supabase
+    .from("slideshow_items")
+    .delete()
+    .eq("slideshow_id", slideshowId);
+  if (delErr) throw new Error(delErr.message);
+  if (items.length > 0) {
+    const rows = items.map((it, i) => ({
+      slideshow_id: slideshowId,
+      dashboard_id: it.dashboardId,
+      position: i,
+      seconds: it.seconds,
+    }));
+    const { error: insErr } = await supabase.from("slideshow_items").insert(rows);
+    if (insErr) throw new Error(insErr.message);
+  }
+  emit();
+}
+
 // ---------- App settings (singleton) ----------
 export async function getAppSettings(): Promise<{ systemName: string }> {
   const { data, error } = await supabase
