@@ -16,6 +16,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "./ThemeToggle";
+import { MobileBottomNav } from "./MobileBottomNav";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
