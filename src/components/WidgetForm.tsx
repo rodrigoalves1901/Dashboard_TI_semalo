@@ -12,6 +12,8 @@ const CHART_OPTIONS: { value: ChartType; label: string }[] = [
   { value: "line", label: "Linha" },
   { value: "donut", label: "Donut" },
   { value: "table", label: "Tabela" },
+  { value: "markdown", label: "Texto/Markdown" },
+  { value: "divider", label: "Divisória" },
 ];
 
 type Props = {
@@ -25,9 +27,13 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
   const [presetId, setPresetId] = useState<PresetId>("tickets_open");
   const [chartType, setChartType] = useState<ChartType>("metric");
   const [connectionId, setConnectionId] = useState<string>("");
+  const [content, setContent] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
+  const isText = chartType === "markdown" || chartType === "divider";
+
   useEffect(() => {
+    if (isText) return;
     const p = getPreset(presetId);
     if (p) {
       setChartType(p.defaultChart);
@@ -37,20 +43,23 @@ export function WidgetForm({ dashboardId, connections, onCreated }: Props) {
   }, [presetId]);
 
   const submit = async () => {
-    if (!title.trim()) return toast.error("Defina um título");
+    if (chartType !== "divider" && !title.trim() && chartType !== "markdown") return toast.error("Defina um título");
+    if (chartType === "markdown" && !content.trim()) return toast.error("Escreva algum conteúdo");
     setSaving(true);
     try {
       await createWidget({
         dashboardId,
-        connectionId: connectionId || null,
-        title: title.trim(),
+        connectionId: isText ? null : (connectionId || null),
+        title: title.trim() || (chartType === "divider" ? "" : "Widget"),
         chartType,
-        preset: presetId,
-        refreshInterval: 60,
+        preset: isText ? "" : presetId,
+        refreshInterval: isText ? 0 : 60,
         position: null,
+        content: chartType === "markdown" ? content : null,
       });
       toast.success("Widget adicionado");
       setTitle("");
+      setContent("");
       onCreated?.();
     } catch (err) {
       toast.error((err as Error).message);
