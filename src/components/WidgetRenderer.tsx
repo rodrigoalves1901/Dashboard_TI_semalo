@@ -162,7 +162,17 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
               <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)" }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="var(--chart-1)" />
+              <Bar
+                dataKey="value"
+                radius={[4, 4, 0, 0]}
+                fill="var(--chart-1)"
+                cursor={clickable ? "pointer" : undefined}
+                onClick={
+                  clickable
+                    ? (d: any) => onDrilldown?.({ name: String(d?.name ?? ""), value: Number(d?.value ?? 0) })
+                    : undefined
+                }
+              />
             </BarChart>
           ) : chartType === "line" && data.timeSeries ? (
             <LineChart data={data.timeSeries} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -185,6 +195,12 @@ export function WidgetRenderer({ title, presetId, chartType, suffix, bare, conte
                 paddingAngle={2}
                 stroke="var(--card)"
                 strokeWidth={2}
+                cursor={clickable ? "pointer" : undefined}
+                onClick={
+                  clickable
+                    ? (d: any) => onDrilldown?.({ name: String(d?.name ?? ""), value: Number(d?.value ?? 0) })
+                    : undefined
+                }
               >
                 {data.series.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
