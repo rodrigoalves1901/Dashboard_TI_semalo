@@ -52,16 +52,20 @@ export function mockDetailRows(
   for (let i = 0; i < count; i++) {
     const k = (seed + i) % 9973;
     const cat = slice?.name && cats.includes(slice.name) ? slice.name : cats[k % cats.length];
-    const prio = slice?.name && prios.includes(slice.name) ? slice.name : prios[(k * 3) % prios.length];
-    const status = slice?.name && statuses.includes(slice.name) ? slice.name : statuses[(k * 7) % statuses.length];
+    const prio =
+      slice?.name && prios.includes(slice.name) ? slice.name : prios[(k * 3) % prios.length];
+    const status =
+      slice?.name && statuses.includes(slice.name)
+        ? slice.name
+        : statuses[(k * 7) % statuses.length];
     const d = new Date(Date.now() - ((k * 137) % 60) * 86400000);
     rows.push({
       "#": 10000 + i + (seed % 500),
-      "Título": titles[(k * 11) % titles.length],
-      "Solicitante": users[(k * 5) % users.length],
-      "Categoria": cat,
-      "Prioridade": prio,
-      "Status": status,
+      Título: titles[(k * 11) % titles.length],
+      Solicitante: users[(k * 5) % users.length],
+      Categoria: cat,
+      Prioridade: prio,
+      Status: status,
       "Aberto em": d.toISOString().slice(0, 10),
     });
   }

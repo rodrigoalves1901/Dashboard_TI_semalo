@@ -51,15 +51,15 @@ function ResetPasswordPage() {
       <div className="w-full max-w-md rounded-[14px] border border-border bg-card p-8 shadow-card">
         <h2 className="text-2xl font-bold tracking-tight">Definir nova senha</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {ready
-            ? "Digite a nova senha da sua conta."
-            : "Validando link de recuperação..."}
+          {ready ? "Digite a nova senha da sua conta." : "Validando link de recuperação..."}
         </p>
 
         {ready && (
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Nova senha</span>
+              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                Nova senha
+              </span>
               <input
                 type="password"
                 required
@@ -70,7 +70,9 @@ function ResetPasswordPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Confirmar senha</span>
+              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                Confirmar senha
+              </span>
               <input
                 type="password"
                 required

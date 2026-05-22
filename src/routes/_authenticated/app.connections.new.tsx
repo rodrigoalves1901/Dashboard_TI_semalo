@@ -15,6 +15,8 @@ const SYSTEM_DEFAULTS: Record<SystemType, { port: number; database: string }> = 
   mariadb: { port: 3306, database: "mariadb" },
   sqlserver: { port: 1433, database: "master" },
   sharepoint: { port: 443, database: "" },
+  msgraph_licenses: { port: 443, database: "" },
+  bigquery: { port: 443, database: "" },
   demo: { port: 0, database: "demo" },
 };
 
@@ -24,6 +26,8 @@ const SYSTEM_LABELS: Record<SystemType, string> = {
   mariadb: "MariaDB",
   sqlserver: "SQL Server",
   sharepoint: "SharePoint (Microsoft Graph)",
+  msgraph_licenses: "Microsoft 365 (Graph API Licenças)",
+  bigquery: "Google BigQuery",
 };
 
 function NewConnectionPage() {
@@ -97,6 +101,8 @@ function NewConnectionPage() {
   };
 
   const isSharepoint = form.systemType === "sharepoint";
+  const isMsGraphLicenses = form.systemType === "msgraph_licenses";
+  const isBigQuery = form.systemType === "bigquery";
   const isSqlServer = form.systemType === "sqlserver";
   const isDemo = form.systemType === "demo";
 
@@ -121,7 +127,10 @@ function NewConnectionPage() {
         </div>
       </header>
 
-      <form onSubmit={onSubmit} className="rounded-[14px] border border-border bg-card p-6 shadow-card space-y-5">
+      <form
+        onSubmit={onSubmit}
+        className="rounded-[14px] border border-border bg-card p-6 shadow-card space-y-5"
+      >
         <Field label="Nome da conexão" hint="Ex: GLPI Produção">
           <input
             required
@@ -152,9 +161,51 @@ function NewConnectionPage() {
             Esta conexão alimenta os widgets com dados mockados (mesmos presets do GLPI), perfeito
             para construir e validar dashboards enquanto o acesso real ao banco não está liberado.
           </div>
-        ) : isSharepoint ? (
+        ) : isBigQuery ? (
           <>
-            <Field label="Tenant ID (Directory ID)" hint="Azure AD tenant que possui o app registrado">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Project ID" hint="ID do projeto no Google Cloud (ex: meu-projeto-123)">
+                <input
+                  required
+                  value={form.database}
+                  onChange={(e) => update("database", e.target.value)}
+                  placeholder="meu-projeto-123"
+                  className="input font-mono"
+                />
+              </Field>
+              <Field label="Dataset (opcional)" hint="Nome do dataset padrão para queries">
+                <input
+                  value={form.host}
+                  onChange={(e) => update("host", e.target.value)}
+                  placeholder="meu_dataset"
+                  className="input font-mono"
+                />
+              </Field>
+            </div>
+            <Field label="JSON Key (Service Account)" hint="Cole aqui o conteúdo completo do arquivo .json da sua Service Account">
+              <textarea
+                required
+                value={form.password}
+                onChange={(e) => update("password", e.target.value)}
+                placeholder={'{ "type": "service_account", "project_id": "...", ... }'}
+                className="input font-mono"
+                style={{ height: 140, resize: "vertical", paddingTop: 10, paddingBottom: 10 }}
+              />
+            </Field>
+            <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4 text-sm text-muted-foreground">
+              <strong className="text-foreground">Como obter o JSON Key:</strong> No Google Cloud Console, acesse{" "}
+              <em>IAM &amp; Admin → Service Accounts</em>, crie ou selecione uma conta de serviço com permissão{" "}
+              <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">BigQuery Data Viewer</code>{" "}
+              e <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">BigQuery Job User</code>,
+              depois gere uma nova chave do tipo JSON e cole o conteúdo aqui.
+            </div>
+          </>
+        ) : isSharepoint || isMsGraphLicenses ? (
+          <>
+            <Field
+              label="Tenant ID (Directory ID)"
+              hint="Azure AD tenant que possui o app registrado"
+            >
               <input
                 required
                 value={form.host}
@@ -163,15 +214,17 @@ function NewConnectionPage() {
                 className="input font-mono"
               />
             </Field>
-            <Field label="Site URL" hint="Ex: contoso.sharepoint.com:/sites/Marketing">
-              <input
-                required
-                value={form.database}
-                onChange={(e) => update("database", e.target.value)}
-                placeholder="contoso.sharepoint.com:/sites/Marketing"
-                className="input font-mono"
-              />
-            </Field>
+            {isSharepoint && (
+              <Field label="Site URL" hint="Ex: contoso.sharepoint.com:/sites/Marketing">
+                <input
+                  required
+                  value={form.database}
+                  onChange={(e) => update("database", e.target.value)}
+                  placeholder="contoso.sharepoint.com:/sites/Marketing"
+                  className="input font-mono"
+                />
+              </Field>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Client ID (Application ID)">
                 <input
@@ -191,6 +244,11 @@ function NewConnectionPage() {
                 />
               </Field>
             </div>
+            {isMsGraphLicenses && (
+              <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4 text-sm text-muted-foreground mt-2">
+                <strong className="text-foreground">Dica de Permissão:</strong> O seu aplicativo registrado no Microsoft Entra ID (Azure AD) precisa da permissão do tipo aplicação <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">Organization.Read.All</code> ou similar para conseguir ler os SKUs e licenças ativas do tenant.
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -267,8 +325,12 @@ function NewConnectionPage() {
           >
             {testing ? "Testando..." : "Testar conexão"}
           </button>
-          {tested === "ok" && <span className="text-xs font-semibold text-success">✓ Conexão OK</span>}
-          {tested === "fail" && <span className="text-xs font-semibold text-destructive">✗ Falhou</span>}
+          {tested === "ok" && (
+            <span className="text-xs font-semibold text-success">✓ Conexão OK</span>
+          )}
+          {tested === "fail" && (
+            <span className="text-xs font-semibold text-destructive">✗ Falhou</span>
+          )}
           <div className="flex-1" />
           <button
             type="submit"
@@ -285,7 +347,15 @@ function NewConnectionPage() {
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>

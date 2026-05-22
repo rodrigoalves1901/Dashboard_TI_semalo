@@ -106,37 +106,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(translateError(error.message));
+    setReady(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(translateError(error.message));
+      if (data.session) {
+        await applySession(data.session);
+      } else {
+        setReady(true);
+      }
+    } catch (err) {
+      setReady(true);
+      throw err;
+    }
   };
 
   const signUp = async (name: string, email: string, password: string, orgName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name },
-        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-      },
-    });
-    if (error) throw new Error(translateError(error.message));
-    if (!data.session) {
-      // Email confirmation required — can't create org until confirmed.
-      return;
-    }
-    // Session active: create the org via Supabase (RLS allows owner_id = auth.uid()).
+    setReady(false);
     try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
+        },
+      });
+      if (error) throw new Error(translateError(error.message));
+      if (!data.session) {
+        // Email confirmation required — can't create org until confirmed.
+        setReady(true);
+        return;
+      }
+      // Session active: create the org via Supabase (RLS allows owner_id = auth.uid()).
       const org = await createOrg(orgName);
       setCurrentOrgId(org.id);
-      await reloadOrgs(data.user?.id ?? null);
+      await applySession(data.session);
     } catch (err) {
-      console.error("Failed to create org on signup", err);
+      setReady(true);
+      throw err;
     }
   };
 
   const signOut = async () => {
-    setCurrentOrgId(null);
-    await supabase.auth.signOut();
+    setReady(false);
+    try {
+      setCurrentOrgId(null);
+      await supabase.auth.signOut();
+      await applySession(null);
+    } catch (err) {
+      setReady(true);
+      throw err;
+    }
   };
 
   const resetPassword = async (email: string) => {
@@ -189,7 +210,6 @@ function translateError(msg: string) {
   if (m.includes("already registered") || m.includes("already been registered"))
     return "Este email já está em uso";
   if (m.includes("email not confirmed")) return "Confirme seu email antes de entrar";
-  if (m.includes("password should be at least"))
-    return "A senha deve ter pelo menos 6 caracteres";
+  if (m.includes("password should be at least")) return "A senha deve ter pelo menos 6 caracteres";
   return msg;
 }

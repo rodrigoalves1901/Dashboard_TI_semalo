@@ -4,6 +4,7 @@ import {
   getDashboard,
   listWidgets,
   listConnections,
+  updateDashboard,
   subscribe,
   type Connection,
   type Dashboard,
@@ -13,6 +14,7 @@ import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { WidgetGrid } from "@/components/WidgetGrid";
 import { WidgetForm } from "@/components/WidgetForm";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/app/dashboards/$id")({
 function DashboardView() {
   const { id } = Route.useParams();
   const { currentOrg } = useAuth();
+  const { can } = usePermissions();
   const childMatches = useChildMatches();
   const hasChild = childMatches.length > 0;
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -64,6 +67,18 @@ function DashboardView() {
     };
   }, [id, currentOrg]);
 
+  const renameDashboard = async () => {
+    if (!dashboard) return;
+    const name = window.prompt("Nome do dashboard", dashboard.name);
+    if (!name || name.trim() === "") return;
+    try {
+      await updateDashboard(dashboard.id, { name: name.trim() });
+      toast.success("Dashboard renomeado");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
   if (hasChild) return <Outlet />;
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -71,7 +86,10 @@ function DashboardView() {
   if (!dashboard) {
     return (
       <div className="space-y-3">
-        <Link to="/app" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft size={14} /> Voltar
         </Link>
         <p className="text-sm text-muted-foreground">Dashboard não encontrado.</p>
@@ -81,55 +99,81 @@ function DashboardView() {
 
   return (
     <div className="space-y-6">
-      <Link to="/app" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/app"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft size={14} /> Dashboards
       </Link>
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{dashboard.name}</h1>
+          {can("dashboards", "edit") ? (
+            <button
+              onClick={renameDashboard}
+              className="text-2xl font-bold tracking-tight hover:underline flex items-center gap-2 group text-left"
+            >
+              {dashboard.name}
+              <Pencil
+                size={16}
+                className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+              />
+            </button>
+          ) : (
+            <h1 className="text-2xl font-bold tracking-tight">{dashboard.name}</h1>
+          )}
           {dashboard.description && (
             <p className="mt-1 text-sm text-muted-foreground">{dashboard.description}</p>
           )}
         </div>
         <div className="flex gap-2">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                <Plus size={14} /> Adicionar widget
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Novo widget</DialogTitle>
-              </DialogHeader>
-              <WidgetForm
-                dashboardId={dashboard.id}
-                connections={conns}
-                onCreated={() => setOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-          <Link
-            to="/app/dashboards/$id/edit"
-            params={{ id: dashboard.id }}
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary"
-          >
-            <Pencil size={14} /> Editar dashboard
-          </Link>
+          {can("dashboards", "edit") && (
+            <>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                    <Plus size={14} /> Adicionar widget
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Novo widget</DialogTitle>
+                  </DialogHeader>
+                  <WidgetForm
+                    dashboardId={dashboard.id}
+                    connections={conns}
+                    onCreated={() => setOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+              <Link
+                to="/app/dashboards/$id/edit"
+                params={{ id: dashboard.id }}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:bg-secondary"
+              >
+                <Pencil size={14} /> Editar dashboard
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
       {widgets.length === 0 ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <Plus size={20} />
-            Adicionar primeiro widget
+        can("dashboards", "edit") ? (
+          <button
+            onClick={() => setOpen(true)}
+            className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Plus size={20} />
+              Adicionar primeiro widget
+            </div>
+          </button>
+        ) : (
+          <div className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground">
+            Nenhum widget cadastrado neste dashboard.
           </div>
-        </button>
+        )
       ) : (
         <WidgetGrid widgets={widgets} editable={false} />
       )}

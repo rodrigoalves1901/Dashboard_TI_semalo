@@ -21,16 +21,25 @@ type Props = {
 
 type Mode = "off" | "table" | "dashboard";
 
-export function WidgetDrilldownDialog({ config, defaultConnectionId, connections, dashboards, onChange }: Props) {
+export function WidgetDrilldownDialog({
+  config,
+  defaultConnectionId,
+  connections,
+  dashboards,
+  onChange,
+}: Props) {
   const [open, setOpen] = useState(false);
-  const initial: Mode = config?.type === "table" ? "table" : config?.type === "dashboard" ? "dashboard" : "off";
+  const initial: Mode =
+    config?.type === "table" ? "table" : config?.type === "dashboard" ? "dashboard" : "off";
   const [mode, setMode] = useState<Mode>(initial);
-  const [title, setTitle] = useState<string>(config?.type === "table" ? config.title ?? "" : "");
+  const [title, setTitle] = useState<string>(config?.type === "table" ? (config.title ?? "") : "");
   const [connectionId, setConnectionId] = useState<string>(
     (config?.type === "table" ? config.connectionId : null) ?? defaultConnectionId ?? "",
   );
-  const [sql, setSql] = useState<string>(config?.type === "table" ? config.sql ?? "" : "");
-  const [dashboardId, setDashboardId] = useState<string>(config?.type === "dashboard" ? config.dashboardId : "");
+  const [sql, setSql] = useState<string>(config?.type === "table" ? (config.sql ?? "") : "");
+  const [dashboardId, setDashboardId] = useState<string>(
+    config?.type === "dashboard" ? config.dashboardId : "",
+  );
 
   const has = !!config;
 
@@ -123,8 +132,8 @@ export function WidgetDrilldownDialog({ config, defaultConnectionId, connections
                   className="w-full rounded-md border border-border bg-card p-2 font-mono text-xs"
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Enquanto o backend de execução real não estiver plugado, a planilha mostra dados de exemplo
-                  derivados do widget.
+                  Enquanto o backend de execução real não estiver plugado, a planilha mostra dados
+                  de exemplo derivados do widget.
                 </p>
               </Field>
             </div>

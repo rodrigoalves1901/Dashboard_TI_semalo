@@ -1,14 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  listConnections,
-  deleteConnection,
-  subscribe,
-  type Connection,
-} from "@/lib/data";
+import { listConnections, deleteConnection, subscribe, type Connection } from "@/lib/data";
 import { testConnectionOnServer } from "@/lib/connections.functions";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Plus, Trash2, Wifi, WifiOff } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
+import { Database, Pencil, Plus, Trash2, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/connections/")({
@@ -17,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/app/connections/")({
 
 function ConnectionsPage() {
   const { currentOrg } = useAuth();
+  const { can } = usePermissions();
   const [conns, setConns] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState<string | null>(null);
@@ -91,26 +88,34 @@ function ConnectionsPage() {
             Conecte-se aos bancos dos seus sistemas (GLPI, MySQL, etc) via IP e porta.
           </p>
         </div>
-        <Link
-          to="/app/connections/new"
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          <Plus size={16} /> Nova conexão
-        </Link>
+        {can("connections", "create") && (
+          <Link
+            to="/app/connections/new"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus size={16} /> Nova conexão
+          </Link>
+        )}
       </header>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : conns.length === 0 ? (
-        <Link
-          to="/app/connections/new"
-          className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <Database size={20} />
-            Adicionar primeira conexão
+        can("connections", "create") ? (
+          <Link
+            to="/app/connections/new"
+            className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Database size={20} />
+              Adicionar primeira conexão
+            </div>
+          </Link>
+        ) : (
+          <div className="flex h-40 w-full items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground">
+            Nenhuma conexão cadastrada nesta organização.
           </div>
-        </Link>
+        )
       ) : (
         <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-card">
           <table className="w-full text-sm">
@@ -150,6 +155,16 @@ function ConnectionsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
+                        {can("connections", "edit") && (
+                          <Link
+                            to="/app/connections/$id/edit"
+                            params={{ id: c.id }}
+                            className="grid h-8 w-8 place-items-center rounded-md border border-border hover:bg-secondary"
+                            aria-label="Editar"
+                          >
+                            <Pencil size={14} />
+                          </Link>
+                        )}
                         <button
                           onClick={() => test(c)}
                           disabled={testing === c.id}
@@ -157,13 +172,15 @@ function ConnectionsPage() {
                         >
                           {testing === c.id ? "Testando..." : "Testar"}
                         </button>
-                        <button
-                          onClick={() => remove(c.id)}
-                          className="grid h-8 w-8 place-items-center rounded-md text-destructive hover:bg-destructive/10"
-                          aria-label="Remover"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {can("connections", "edit") && (
+                          <button
+                            onClick={() => remove(c.id)}
+                            className="grid h-8 w-8 place-items-center rounded-md text-destructive hover:bg-destructive/10"
+                            aria-label="Remover"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Bell, BellOff } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { OP_LABEL, type AlertOp, type AlertRule, type AlertThreshold } from "@/lib/alert-rule";
 
 type Props = {
@@ -17,19 +24,26 @@ function defaultThreshold(): AlertThreshold {
 export function WidgetAlertDialog({ rule, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [warnEnabled, setWarnEnabled] = useState<boolean>(!!rule?.warning);
+  const [impEnabled, setImpEnabled] = useState<boolean>(!!rule?.important);
   const [critEnabled, setCritEnabled] = useState<boolean>(!!rule?.critical);
   const [warning, setWarning] = useState<AlertThreshold>(rule?.warning ?? defaultThreshold());
-  const [critical, setCritical] = useState<AlertThreshold>(rule?.critical ?? { op: ">", value: 50 });
+  const [important, setImportant] = useState<AlertThreshold>(
+    rule?.important ?? { op: ">", value: 25 },
+  );
+  const [critical, setCritical] = useState<AlertThreshold>(
+    rule?.critical ?? { op: ">", value: 50 },
+  );
   const [blink, setBlink] = useState<boolean>(rule?.blink ?? true);
 
-  const hasRule = !!rule && (!!rule.warning || !!rule.critical);
+  const hasRule = !!rule && (!!rule.warning || !!rule.important || !!rule.critical);
 
   const save = () => {
-    if (!warnEnabled && !critEnabled) {
+    if (!warnEnabled && !impEnabled && !critEnabled) {
       onChange(null);
     } else {
       onChange({
         warning: warnEnabled ? warning : null,
+        important: impEnabled ? important : null,
         critical: critEnabled ? critical : null,
         blink,
       });
@@ -39,6 +53,7 @@ export function WidgetAlertDialog({ rule, onChange }: Props) {
 
   const clear = () => {
     setWarnEnabled(false);
+    setImpEnabled(false);
     setCritEnabled(false);
     onChange(null);
     setOpen(false);
@@ -66,8 +81,8 @@ export function WidgetAlertDialog({ rule, onChange }: Props) {
         </DialogHeader>
         <div className="space-y-5 py-2">
           <p className="text-xs text-muted-foreground">
-            Quando o valor da métrica satisfizer a condição, o card muda de cor.
-            Configure um ou os dois níveis.
+            Quando o valor da métrica satisfizer a condição, o card muda de cor. Configure um ou os
+            dois níveis.
           </p>
 
           <ThresholdRow
@@ -77,6 +92,14 @@ export function WidgetAlertDialog({ rule, onChange }: Props) {
             onToggle={setWarnEnabled}
             value={warning}
             onChange={setWarning}
+          />
+          <ThresholdRow
+            label="Importante (laranja)"
+            color="important"
+            enabled={impEnabled}
+            onToggle={setImpEnabled}
+            value={important}
+            onChange={setImportant}
           />
           <ThresholdRow
             label="Crítico (vermelho)"
@@ -127,13 +150,18 @@ function ThresholdRow({
   onChange,
 }: {
   label: string;
-  color: "warning" | "critical";
+  color: "warning" | "important" | "critical";
   enabled: boolean;
   onToggle: (b: boolean) => void;
   value: AlertThreshold;
   onChange: (t: AlertThreshold) => void;
 }) {
-  const dotClass = color === "critical" ? "bg-destructive" : "bg-[var(--warning)]";
+  const dotClass =
+    color === "critical"
+      ? "bg-destructive"
+      : color === "important"
+        ? "bg-[var(--important)]"
+        : "bg-[var(--warning)]";
   return (
     <div className="rounded-lg border border-border p-3">
       <label className="flex items-center gap-2 text-sm font-semibold">

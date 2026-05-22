@@ -5,29 +5,47 @@ export type AlertThreshold = { op: AlertOp; value: number };
 
 export type AlertRule = {
   warning?: AlertThreshold | null;
+  important?: AlertThreshold | null;
   critical?: AlertThreshold | null;
   blink?: boolean;
 } | null;
 
-export type AlertLevel = "critical" | "warning" | null;
+export type AlertLevel = "critical" | "important" | "warning" | null;
 
-export function evaluateAlert(value: number | string | null | undefined, rule: AlertRule): AlertLevel {
+export function evaluateAlert(
+  value: number | string | null | undefined,
+  rule: AlertRule,
+): AlertLevel {
   if (!rule) return null;
-  const n = typeof value === "number" ? value : Number(String(value ?? "").replace(/[^\d.,-]/g, "").replace(",", "."));
+  const n =
+    typeof value === "number"
+      ? value
+      : Number(
+          String(value ?? "")
+            .replace(/[^\d.,-]/g, "")
+            .replace(",", "."),
+        );
   if (!Number.isFinite(n)) return null;
   if (rule.critical && match(n, rule.critical)) return "critical";
+  if (rule.important && match(n, rule.important)) return "important";
   if (rule.warning && match(n, rule.warning)) return "warning";
   return null;
 }
 
 function match(n: number, t: AlertThreshold): boolean {
   switch (t.op) {
-    case ">": return n > t.value;
-    case ">=": return n >= t.value;
-    case "<": return n < t.value;
-    case "<=": return n <= t.value;
-    case "=": return n === t.value;
-    default: return false;
+    case ">":
+      return n > t.value;
+    case ">=":
+      return n >= t.value;
+    case "<":
+      return n < t.value;
+    case "<=":
+      return n <= t.value;
+    case "=":
+      return n === t.value;
+    default:
+      return false;
   }
 }
 

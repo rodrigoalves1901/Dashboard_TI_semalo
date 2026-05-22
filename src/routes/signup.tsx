@@ -37,7 +37,9 @@ function SignupPage() {
     <div className="min-h-screen grid place-items-center bg-background p-6">
       <div className="w-full max-w-md rounded-[14px] border border-border bg-card p-8 shadow-card">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">F</div>
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
+            D
+          </div>
           <span className="text-lg font-bold">{systemName}</span>
         </div>
         <h2 className="mt-6 text-2xl font-bold tracking-tight">Criar sua conta</h2>
@@ -45,16 +47,39 @@ function SignupPage() {
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <Field label="Seu nome">
-            <input required value={name} onChange={(e) => setName(e.target.value)} className="input" />
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input"
+            />
           </Field>
           <Field label="Nome da organização">
-            <input required value={orgName} onChange={(e) => setOrgName(e.target.value)} className="input" />
+            <input
+              required
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              className="input"
+            />
           </Field>
           <Field label="Email">
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" />
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+            />
           </Field>
           <Field label="Senha">
-            <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input" />
+            <input
+              required
+              type="password"
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+            />
           </Field>
           <button
             type="submit"

@@ -14,9 +14,15 @@ import {
   Compass,
   Tv,
   PlayCircle,
+  ShieldCheck,
+  Users,
+  UserPlus,
+  Bot,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
+import { type MenuKey } from "@/lib/rbac";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { cn } from "@/lib/utils";
@@ -30,19 +36,35 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const nav = [
-  { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true },
-  { to: "/app/tv", label: "Modo TV", icon: Tv },
-  { to: "/app/slideshow", label: "Slideshow", icon: PlayCircle },
-  { to: "/app/connections", label: "Conexões", icon: Database },
-  { to: "/app/explorer", label: "Explorer", icon: Compass },
-  { to: "/app/settings", label: "Configurações", icon: Settings },
+  { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true, menuKey: "dashboards" as const },
+  { to: "/app/tv", label: "Modo TV", icon: Tv, menuKey: "tv" as const },
+  { to: "/app/slideshow", label: "Slideshow", icon: PlayCircle, menuKey: "slideshow" as const },
+  { to: "/app/connections", label: "Conexões", icon: Database, menuKey: "connections" as const },
+  { to: "/app/explorer", label: "Explorer", icon: Compass, menuKey: "explorer" as const },
+  { to: "/app/settings", label: "Configurações", icon: Settings, menuKey: "settings" as const },
+  { to: "/app/ia", label: "IA", icon: Bot, menuKey: "ia" as const },
+];
+
+const adminNav = [
+  { to: "/app/admin/roles", label: "Perfis de Acesso", icon: ShieldCheck },
+  { to: "/app/admin/groups", label: "Grupos", icon: Users },
+  { to: "/app/admin/users", label: "Usuários", icon: UserPlus },
 ];
 
 const STORAGE_KEY = "flup.sidebarCollapsed";
 
+import { useAIScheduler } from "@/hooks/use-ai-scheduler";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, currentOrg, orgs, signOut, switchOrg } = useAuth();
+  const { isSuperAdmin, can } = usePermissions();
+
+  // Activating global background AI voice scheduler
+  useAIScheduler(currentOrg?.id);
+
+  const visibleNav = nav.filter((item) => can(item.menuKey, "view"));
+
 
   const [collapsed, setCollapsed] = useState<boolean>(false);
   useEffect(() => {
@@ -52,8 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggle = () => {
     setCollapsed((c) => {
       const next = !c;
-      if (typeof window !== "undefined")
-        window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+      if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
       return next;
     });
   };
@@ -72,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Org switcher / brand */}
         {collapsed ? (
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
-            {(currentOrg?.name ?? "F").slice(0, 1).toUpperCase()}
+            {(currentOrg?.name ?? "D").slice(0, 1).toUpperCase()}
           </div>
         ) : (
           <DropdownMenu>
@@ -106,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <nav className={cn("flex flex-col gap-1", collapsed ? "mt-4 items-center" : "")}>
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to, item.exact);
             return (
@@ -117,9 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center rounded-md transition-colors",
-                  collapsed
-                    ? "h-10 w-10 justify-center"
-                    : "h-9 gap-2 px-3 text-sm",
+                  collapsed ? "h-10 w-10 justify-center" : "h-9 gap-2 px-3 text-sm",
                   active
                     ? "bg-accent font-semibold text-accent-foreground"
                     : "font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -131,6 +150,42 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Admin section — super-admin only */}
+        {isSuperAdmin && (
+          <>
+            {!collapsed && (
+              <div className="mt-5 mb-2 px-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                Administração
+              </div>
+            )}
+            {collapsed && <div className="my-2 h-px w-full bg-border" />}
+            <nav className={cn("flex flex-col gap-1", collapsed ? "items-center" : "")}>
+              {adminNav.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    aria-label={item.label}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "flex items-center rounded-md transition-colors",
+                      collapsed ? "h-10 w-10 justify-center" : "h-9 gap-2 px-3 text-sm",
+                      active
+                        ? "bg-accent font-semibold text-accent-foreground"
+                        : "font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    <Icon size={collapsed ? 18 : 16} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </nav>
+          </>
+        )}
 
         <div className={cn("mt-auto", collapsed ? "" : "rounded-lg border border-border p-3")}>
           {collapsed ? (
@@ -183,7 +238,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
           <div className="relative flex-1 max-w-md">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               placeholder="Buscar dashboards, conexões..."
               className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
@@ -196,12 +254,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Bell size={16} />
           </button>
-          <Link
-            to="/app/connections/new"
-            className="hidden sm:inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
-          >
-            <Plus size={14} /> Nova conexão
-          </Link>
+          {can("connections", "create") && (
+            <Link
+              to="/app/connections/new"
+              className="hidden sm:inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <Plus size={14} /> Nova conexão
+            </Link>
+          )}
           {/* Mobile user menu */}
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -213,7 +273,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="truncate text-[12px] font-bold">{user?.name}</div>
-                <div className="truncate text-[11px] font-normal text-muted-foreground">{user?.email}</div>
+                <div className="truncate text-[11px] font-normal text-muted-foreground">
+                  {user?.email}
+                </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground/70">

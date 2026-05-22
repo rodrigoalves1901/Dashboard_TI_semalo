@@ -9,6 +9,7 @@ import {
   updateDashboard,
   updateWidgetPosition,
   updateWidgetValueScale,
+  updateWidgetStyles,
   updateWidgetAlertRule,
   updateWidgetDrilldown,
   subscribe,
@@ -16,11 +17,12 @@ import {
   type Dashboard,
   type Widget,
 } from "@/lib/data";
-import { ArrowLeft, Plus, Save, Undo2 } from "lucide-react";
+import { ArrowLeft, Plus, Save, Undo2, Pencil } from "lucide-react";
 import { WidgetGrid } from "@/components/WidgetGrid";
 import { WidgetForm } from "@/components/WidgetForm";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/app/dashboards/$id/edit")({
   component: DashboardEditor,
@@ -35,11 +37,16 @@ function DashboardEditor() {
   const [conns, setConns] = useState<Connection[]>([]);
   const [allDashboards, setAllDashboards] = useState<Dashboard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pending, setPending] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
+  const [pending, setPending] = useState<
+    Record<string, { x: number; y: number; w: number; h: number }>
+  >({});
   const [saving, setSaving] = useState(false);
   const [undoing, setUndoing] = useState(false);
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   // Snapshot of positions as they were on first load — used by "Desfazer".
-  const baselineRef = useRef<Record<string, { x: number; y: number; w: number; h: number }> | null>(null);
+  const baselineRef = useRef<Record<string, { x: number; y: number; w: number; h: number }> | null>(
+    null,
+  );
   const [gridKey, setGridKey] = useState(0);
   const hasPending = Object.keys(pending).length > 0;
 
@@ -82,7 +89,10 @@ function DashboardEditor() {
   if (!dashboard) {
     return (
       <div className="space-y-3">
-        <Link to="/app" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft size={14} /> Voltar
         </Link>
         <p className="text-sm text-muted-foreground">Dashboard não encontrado.</p>
@@ -111,7 +121,11 @@ function DashboardEditor() {
   const onLayout = (map: Record<string, { x: number; y: number; w: number; h: number }>) => {
     // Optimistic update only — autosave happens on drag/resize stop via onCommit.
     setWidgets((prev) =>
-      prev.map((w) => (map[w.id] ? { ...w, position: { x: map[w.id].x, y: map[w.id].y, w: map[w.id].w, h: map[w.id].h } } : w)),
+      prev.map((w) =>
+        map[w.id]
+          ? { ...w, position: { x: map[w.id].x, y: map[w.id].y, w: map[w.id].w, h: map[w.id].h } }
+          : w,
+      ),
     );
   };
 
@@ -131,9 +145,7 @@ function DashboardEditor() {
     if (Object.keys(changed).length === 0) return;
     setPending((prev) => ({ ...prev, ...changed }));
     try {
-      await Promise.all(
-        Object.entries(changed).map(([wid, p]) => updateWidgetPosition(wid, p)),
-      );
+      await Promise.all(Object.entries(changed).map(([wid, p]) => updateWidgetPosition(wid, p)));
       setPending((prev) => {
         const rest = { ...prev };
         for (const k of Object.keys(changed)) delete rest[k];
@@ -166,7 +178,8 @@ function DashboardEditor() {
   const undoLayout = async () => {
     const baseline = baselineRef.current;
     if (!baseline) return;
-    if (!window.confirm("Restaurar o layout para a última posição salva ao abrir o editor?")) return;
+    if (!window.confirm("Restaurar o layout para a última posição salva ao abrir o editor?"))
+      return;
     setUndoing(true);
     try {
       await Promise.all(
@@ -197,17 +210,24 @@ function DashboardEditor() {
 
   return (
     <div className="space-y-6">
-      <Link to="/app" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/app"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft size={14} /> Dashboards
       </Link>
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <button onClick={renameDashboard} className="text-2xl font-bold tracking-tight hover:underline">
+          <button
+            onClick={renameDashboard}
+            className="text-2xl font-bold tracking-tight hover:underline"
+          >
             {dashboard.name}
           </button>
           <p className="mt-1 text-sm text-muted-foreground">
-            Editor — arraste e redimensione os widgets. As mudanças salvam automaticamente ao soltar.
+            Editor — arraste e redimensione os widgets. As mudanças salvam automaticamente ao
+            soltar.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -261,19 +281,34 @@ function DashboardEditor() {
               onLayoutChange={onLayout}
               onCommit={onCommit}
               onRemove={removeWidget}
+              onEdit={setEditingWidget}
               onValueScaleChange={async (wid, scale) => {
-                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, valueScale: scale } : w)));
+                setWidgets((prev) =>
+                  prev.map((w) => (w.id === wid ? { ...w, valueScale: scale } : w)),
+                );
                 try {
                   await updateWidgetValueScale(wid, scale);
                 } catch (err) {
                   toast.error((err as Error).message);
                 }
               }}
+              onStylesChange={async (wid, styles) => {
+                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, styles } : w)));
+                try {
+                  await updateWidgetStyles(wid, styles);
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
               onAlertRuleChange={async (wid, rule) => {
-                setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, alertRule: rule } : w)));
+                setWidgets((prev) =>
+                  prev.map((w) => (w.id === wid ? { ...w, alertRule: rule } : w)),
+                );
                 try {
                   await updateWidgetAlertRule(wid, rule);
-                  toast.success(rule ? "Alerta configurado" : "Alerta removido", { duration: 1200 });
+                  toast.success(rule ? "Alerta configurado" : "Alerta removido", {
+                    duration: 1200,
+                  });
                 } catch (err) {
                   toast.error((err as Error).message);
                 }
@@ -284,7 +319,9 @@ function DashboardEditor() {
                 setWidgets((prev) => prev.map((w) => (w.id === wid ? { ...w, drilldown } : w)));
                 try {
                   await updateWidgetDrilldown(wid, drilldown);
-                  toast.success(drilldown ? "Ação de clique salva" : "Ação removida", { duration: 1200 });
+                  toast.success(drilldown ? "Ação de clique salva" : "Ação removida", {
+                    duration: 1200,
+                  });
                 } catch (err) {
                   toast.error((err as Error).message);
                 }
@@ -293,6 +330,28 @@ function DashboardEditor() {
           )}
         </section>
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!editingWidget} onOpenChange={(open) => !open && setEditingWidget(null)}>
+        <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil size={18} className="text-primary" />
+              Editar Widget
+            </DialogTitle>
+          </DialogHeader>
+          {editingWidget && (
+            <div className="mt-4">
+              <WidgetForm
+                dashboardId={id}
+                connections={conns}
+                initialData={editingWidget}
+                onCreated={() => setEditingWidget(null)}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import GridLayout, { WidthProvider, type Layout } from "react-grid-layout/legacy";
 import { useNavigate } from "@tanstack/react-router";
-import { Trash2, GripVertical, Type } from "lucide-react";
+import { Trash2, GripVertical, Type, Pencil } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
 import { WidgetAlertDialog } from "./WidgetAlertDialog";
 import { WidgetDrilldownDialog } from "./WidgetDrilldownDialog";
 import { DrilldownTableSheet } from "./DrilldownTableSheet";
-import type { Connection, Dashboard, Widget } from "@/lib/data";
+import type { Connection, Dashboard, Widget, WidgetStyles } from "@/lib/data";
+import { WidgetStyleDialog } from "./WidgetStyleDialog";
 import type { PresetId } from "@/lib/glpi-presets";
 import type { AlertRule } from "@/lib/alert-rule";
 import type { DrilldownConfig } from "@/lib/drilldown";
@@ -26,6 +27,7 @@ type Props = {
   onLayoutChange?: (layouts: Record<string, LayoutItem>) => void;
   onCommit?: (positions: Record<string, Pos>) => void;
   onRemove?: (id: string) => void;
+  onEdit?: (widget: Widget) => void;
   onValueScaleChange?: (id: string, scale: number) => void;
   onAlertRuleChange?: (id: string, rule: AlertRule) => void;
   onDrilldownChange?: (id: string, drilldown: DrilldownConfig) => void;
@@ -33,6 +35,7 @@ type Props = {
   connections?: Connection[];
   /** Available dashboards (same org) — used as drilldown destination targets. */
   dashboards?: Dashboard[];
+  onStylesChange?: (id: string, styles: WidgetStyles) => void;
   /** Called by SlideshowPlayer to pause autoplay while drilldown is open. */
   onDrilldownOpenChange?: (open: boolean) => void;
 };
@@ -43,7 +46,8 @@ function defaultPosition(w: Widget, i: number): LayoutItem {
   if (w.position) return { i: w.id, ...w.position, minW: 1, minH: 1 };
   if (w.chartType === "divider") return { i: w.id, x: 0, y: i * 1, w: 12, h: 1, minW: 2, minH: 1 };
   if (w.chartType === "markdown") return { i: w.id, x: 0, y: i * 3, w: 12, h: 3, minW: 3, minH: 2 };
-  if (w.chartType === "metric") return { i: w.id, x: (i * 3) % 12, y: 0, w: 3, h: 2, minW: 2, minH: 2 };
+  if (w.chartType === "metric")
+    return { i: w.id, x: (i * 3) % 12, y: 0, w: 3, h: 2, minW: 2, minH: 2 };
   if (w.chartType === "table") return { i: w.id, x: 0, y: i * 4, w: 12, h: 5, minW: 3, minH: 3 };
   return { i: w.id, x: (i * 6) % 12, y: 100, w: 6, h: 4, minW: 3, minH: 3 };
 }
@@ -54,9 +58,11 @@ export function WidgetGrid({
   onLayoutChange,
   onCommit,
   onRemove,
+  onEdit,
   onValueScaleChange,
   onAlertRuleChange,
   onDrilldownChange,
+  onStylesChange,
   connections = [],
   dashboards = [],
   onDrilldownOpenChange,
@@ -67,10 +73,7 @@ export function WidgetGrid({
     slice?: { name: string; value: number } | null;
   } | null>(null);
 
-  const layout = useMemo<Layout>(
-    () => widgets.map((w, i) => defaultPosition(w, i)),
-    [widgets],
-  );
+  const layout = useMemo<Layout>(() => widgets.map((w, i) => defaultPosition(w, i)), [widgets]);
 
   const handleChange = (current: Layout) => {
     if (!onLayoutChange) return;
@@ -120,7 +123,8 @@ export function WidgetGrid({
         onResizeStop={commit}
       >
         {widgets.map((w) => {
-          const interactive = !editable && !!w.drilldown && w.chartType !== "divider" && w.chartType !== "markdown";
+          const interactive =
+            !editable && !!w.drilldown && w.chartType !== "divider" && w.chartType !== "markdown";
           return (
             <div
               key={w.id}
@@ -143,7 +147,12 @@ export function WidgetGrid({
                       >
                         <button
                           type="button"
-                          onClick={() => onValueScaleChange(w.id, Math.max(0.5, +(w.valueScale - 0.25).toFixed(2)))}
+                          onClick={() =>
+                            onValueScaleChange(
+                              w.id,
+                              Math.max(0.5, +(w.valueScale - 0.25).toFixed(2)),
+                            )
+                          }
                           className="grid h-6 w-6 place-items-center rounded text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground"
                           aria-label="Diminuir tamanho do valor"
                         >
@@ -154,7 +163,9 @@ export function WidgetGrid({
                         </span>
                         <button
                           type="button"
-                          onClick={() => onValueScaleChange(w.id, Math.min(6, +(w.valueScale + 0.25).toFixed(2)))}
+                          onClick={() =>
+                            onValueScaleChange(w.id, Math.min(6, +(w.valueScale + 0.25).toFixed(2)))
+                          }
                           className="grid h-6 w-6 place-items-center rounded text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground"
                           aria-label="Aumentar tamanho do valor"
                         >
@@ -168,13 +179,30 @@ export function WidgetGrid({
                         onChange={(rule) => onAlertRuleChange(w.id, rule)}
                       />
                     )}
-                    {onDrilldownChange && w.chartType !== "divider" && w.chartType !== "markdown" && (
-                      <WidgetDrilldownDialog
-                        config={w.drilldown}
-                        defaultConnectionId={w.connectionId}
-                        connections={connections}
-                        dashboards={dashboards}
-                        onChange={(cfg) => onDrilldownChange(w.id, cfg)}
+                    {onDrilldownChange &&
+                      w.chartType !== "divider" &&
+                      w.chartType !== "markdown" && (
+                        <WidgetDrilldownDialog
+                          config={w.drilldown}
+                          defaultConnectionId={w.connectionId}
+                          connections={connections}
+                          dashboards={dashboards}
+                          onChange={(cfg) => onDrilldownChange(w.id, cfg)}
+                        />
+                      )}
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(w)}
+                        aria-label="Editar widget"
+                        className="grid h-6 w-6 place-items-center rounded-md bg-card text-muted-foreground shadow-sm hover:bg-secondary hover:text-foreground"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    {onStylesChange && (
+                      <WidgetStyleDialog
+                        styles={w.styles}
+                        onChange={(s) => onStylesChange(w.id, s)}
                       />
                     )}
                     {onRemove && (
@@ -199,6 +227,9 @@ export function WidgetGrid({
                   valueScale={w.valueScale}
                   alertRule={w.alertRule}
                   bare
+                  connectionId={w.connectionId}
+                  refreshInterval={w.refreshInterval}
+                  styles={w.styles}
                   onDrilldown={interactive ? (slice) => handleDrilldown(w, slice) : undefined}
                 />
               </div>
@@ -215,6 +246,7 @@ export function WidgetGrid({
           presetId={active.widget.preset}
           config={active.widget.drilldown}
           slice={active.slice}
+          widgetConnectionId={active.widget.connectionId}
         />
       )}
     </>

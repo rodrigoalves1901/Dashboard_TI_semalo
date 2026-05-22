@@ -2,7 +2,9 @@ import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/
 import { useEffect, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import { createOrg, setCurrentOrgId } from "@/lib/data";
+import { type MenuKey } from "@/lib/rbac";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
 
@@ -11,16 +13,65 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthGate() {
-  const { user, ready, orgs, currentOrg, refreshOrgs } = useAuth();
+  const { user, ready: authReady, orgs, currentOrg, refreshOrgs } = useAuth();
+  const { ready: permReady, isSuperAdmin, can } = usePermissions();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isFullscreenRoute = /^\/app\/(tv\/[^/]+|slideshow\/[^/]+\/play)$/.test(pathname);
 
   useEffect(() => {
-    if (ready && !user) navigate({ to: "/login", replace: true });
-  }, [ready, user, navigate]);
+    if (authReady && !user) navigate({ to: "/login", replace: true });
+  }, [authReady, user, navigate]);
 
-  if (!ready) {
+  // Central Route Authorization Gate
+  useEffect(() => {
+    if (!user || !currentOrg || !permReady) return;
+
+    // 1. Admin routes require super-admin
+    const isAdminRoute = pathname.startsWith("/app/admin");
+    if (isAdminRoute && !isSuperAdmin) {
+      navigate({ to: "/app", replace: true });
+      return;
+    }
+
+    // 2. Module routes require view permission
+    const routeToMenuMap: { prefix: string; menu: MenuKey }[] = [
+      { prefix: "/app/tv", menu: "tv" },
+      { prefix: "/app/slideshow", menu: "slideshow" },
+      { prefix: "/app/connections", menu: "connections" },
+      { prefix: "/app/explorer", menu: "explorer" },
+      { prefix: "/app/settings", menu: "settings" },
+      { prefix: "/app/ia", menu: "ia" },
+    ];
+
+    for (const mapping of routeToMenuMap) {
+      if (pathname.startsWith(mapping.prefix)) {
+        if (!can(mapping.menu, "view")) {
+          navigate({ to: "/app", replace: true });
+          return;
+        }
+      }
+    }
+
+    // 3. Dashboards view check on main dashboard route
+    if (pathname === "/app" || pathname === "/app/" || pathname.startsWith("/app/dashboards")) {
+      if (!can("dashboards", "view")) {
+        const allowedMenus: { menu: MenuKey; path: string }[] = [
+          { menu: "tv", path: "/app/tv" },
+          { menu: "slideshow", path: "/app/slideshow" },
+          { menu: "connections", path: "/app/connections" },
+          { menu: "explorer", path: "/app/explorer" },
+          { menu: "settings", path: "/app/settings" },
+        ];
+        const nextAllowed = allowedMenus.find((m) => can(m.menu, "view"));
+        if (nextAllowed) {
+          navigate({ to: nextAllowed.path, replace: true });
+        }
+      }
+    }
+  }, [pathname, user, currentOrg, permReady, isSuperAdmin, can, navigate]);
+
+  if (!authReady || (user && currentOrg && !permReady)) {
     return (
       <div className="min-h-screen grid place-items-center bg-background text-sm text-muted-foreground">
         Carregando...
@@ -31,7 +82,12 @@ function AuthGate() {
 
   // User authenticated but has no organization yet — onboarding step.
   if (orgs.length === 0 || !currentOrg) {
-    return <OnboardingCreateOrg defaultName={`Workspace de ${user.name.split(" ")[0]}`} onCreated={refreshOrgs} />;
+    return (
+      <OnboardingCreateOrg
+        defaultName={`Workspace de ${user.name.split(" ")[0]}`}
+        onCreated={refreshOrgs}
+      />
+    );
   }
 
   if (isFullscreenRoute) {

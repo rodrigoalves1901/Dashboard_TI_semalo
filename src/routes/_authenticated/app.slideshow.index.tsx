@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { listSlideshows, deleteSlideshow, subscribe, type Slideshow } from "@/lib/data";
+import { listGroups, type Group } from "@/lib/rbac";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import { Plus, PlayCircle, Pencil, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,7 +13,9 @@ export const Route = createFileRoute("/_authenticated/app/slideshow/")({
 
 function SlideshowIndex() {
   const { currentOrg } = useAuth();
+  const { can } = usePermissions();
   const [items, setItems] = useState<Slideshow[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,8 +23,14 @@ function SlideshowIndex() {
     const refresh = async () => {
       if (!currentOrg) return;
       try {
-        const list = await listSlideshows(currentOrg.id);
-        if (!cancelled) setItems(list);
+        const [list, grps] = await Promise.all([
+          listSlideshows(currentOrg.id),
+          listGroups(currentOrg.id),
+        ]);
+        if (!cancelled) {
+          setItems(list);
+          setGroups(grps);
+        }
       } catch (err) {
         if (!cancelled) toast.error((err as Error).message);
       } finally {
@@ -45,6 +55,8 @@ function SlideshowIndex() {
     }
   };
 
+  const groupMap = new Map(groups.map((g) => [g.id, g]));
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -54,12 +66,14 @@ function SlideshowIndex() {
             Crie playlists de dashboards que se alternam em tela cheia.
           </p>
         </div>
-        <Link
-          to="/app/slideshow/new"
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          <Plus size={16} /> Nova playlist
-        </Link>
+        {can("slideshow", "create") && (
+          <Link
+            to="/app/slideshow/new"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus size={16} /> Nova playlist
+          </Link>
+        )}
       </header>
 
       {loading ? (
@@ -68,16 +82,25 @@ function SlideshowIndex() {
         <p className="text-sm text-muted-foreground">Nenhuma playlist ainda.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((s) => (
-            <div key={s.id} className="rounded-[14px] border border-border bg-card p-5 shadow-card">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
-                <PlayCircle size={18} />
-              </div>
-              <h3 className="mt-4 text-base font-bold">{s.name}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Tempo padrão: {s.defaultSeconds}s
-              </p>
-              <div className="mt-4 flex gap-2">
+          {items.map((s) => {
+            const g = s.groupId ? groupMap.get(s.groupId) : null;
+            return (
+              <div key={s.id} className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+                <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
+                  <PlayCircle size={18} />
+                </div>
+                <h3 className="mt-4 text-base font-bold">{s.name}</h3>
+                <div className="mt-1 flex flex-col gap-0.5">
+                  <p className="text-xs text-muted-foreground">
+                    Tempo padrão: {s.defaultSeconds}s
+                  </p>
+                  {g && (
+                    <p className="text-xs text-primary font-medium">
+                      Grupo: {g.name}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-4 flex gap-2">
                 <Link
                   to="/app/slideshow/$id/play"
                   params={{ id: s.id }}
@@ -85,22 +108,27 @@ function SlideshowIndex() {
                 >
                   <Play size={14} /> Reproduzir
                 </Link>
-                <Link
-                  to="/app/slideshow/$id/edit"
-                  params={{ id: s.id }}
-                  className="inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-secondary"
-                >
-                  <Pencil size={13} />
-                </Link>
-                <button
-                  onClick={() => remove(s.id)}
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-xs font-semibold text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 size={13} />
-                </button>
+                {can("slideshow", "edit") && (
+                  <>
+                    <Link
+                      to="/app/slideshow/$id/edit"
+                      params={{ id: s.id }}
+                      className="inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-secondary"
+                    >
+                      <Pencil size={13} />
+                    </Link>
+                    <button
+                      onClick={() => remove(s.id)}
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
     </div>

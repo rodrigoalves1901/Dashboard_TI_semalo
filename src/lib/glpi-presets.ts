@@ -2,6 +2,7 @@
 // against the GLPI MySQL database. Here they generate mock data for the UI.
 
 export type PresetId =
+  | "custom_sql"
   | "tickets_open"
   | "tickets_solved"
   | "tickets_pending"
@@ -19,19 +20,80 @@ export type PresetMeta = {
   description: string;
   defaultChart: "metric" | "bar" | "line" | "donut" | "table";
   category: "Tickets" | "SLA" | "Operação";
+  sql?: string;
 };
 
 export const PRESETS: PresetMeta[] = [
-  { id: "tickets_open", label: "Tickets em aberto", description: "Total de tickets com status novo/atribuído/processando", defaultChart: "metric", category: "Tickets" },
-  { id: "tickets_solved", label: "Tickets resolvidos", description: "Tickets fechados nos últimos 30 dias", defaultChart: "metric", category: "Tickets" },
-  { id: "tickets_pending", label: "Tickets pendentes", description: "Tickets aguardando aprovação", defaultChart: "metric", category: "Tickets" },
-  { id: "tickets_late", label: "Tickets atrasados", description: "Tickets com SLA estourado", defaultChart: "metric", category: "SLA" },
-  { id: "tickets_by_status", label: "Tickets por status", description: "Distribuição por status atual", defaultChart: "donut", category: "Tickets" },
-  { id: "tickets_by_category", label: "Tickets por categoria", description: "Top categorias", defaultChart: "bar", category: "Tickets" },
-  { id: "tickets_by_technician", label: "Tickets por técnico", description: "Carga atribuída por técnico", defaultChart: "bar", category: "Operação" },
-  { id: "tickets_by_priority", label: "Tickets por prioridade", description: "Distribuição por prioridade", defaultChart: "donut", category: "Tickets" },
-  { id: "tickets_evolution", label: "Evolução de tickets", description: "Abertos vs resolvidos por semana", defaultChart: "line", category: "Tickets" },
-  { id: "sla_compliance", label: "Cumprimento de SLA", description: "% de tickets dentro do SLA", defaultChart: "metric", category: "SLA" },
+  {
+    id: "tickets_open",
+    label: "Tickets em aberto",
+    description: "Total de tickets com status novo/atribuído/processando",
+    defaultChart: "metric",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_solved",
+    label: "Tickets resolvidos",
+    description: "Tickets fechados nos últimos 30 dias",
+    defaultChart: "metric",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_pending",
+    label: "Tickets pendentes",
+    description: "Tickets aguardando aprovação",
+    defaultChart: "metric",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_late",
+    label: "Tickets atrasados",
+    description: "Tickets com SLA estourado",
+    defaultChart: "metric",
+    category: "SLA",
+  },
+  {
+    id: "tickets_by_status",
+    label: "Tickets por status",
+    description: "Distribuição por status atual",
+    defaultChart: "donut",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_by_category",
+    label: "Tickets por categoria",
+    description: "Top categorias",
+    defaultChart: "bar",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_by_technician",
+    label: "Tickets por técnico",
+    description: "Carga atribuída por técnico",
+    defaultChart: "bar",
+    category: "Operação",
+  },
+  {
+    id: "tickets_by_priority",
+    label: "Tickets por prioridade",
+    description: "Distribuição por prioridade",
+    defaultChart: "donut",
+    category: "Tickets",
+  },
+  {
+    id: "tickets_evolution",
+    label: "Evolução de tickets",
+    description: "Abertos vs resolvidos por semana",
+    defaultChart: "line",
+    category: "Tickets",
+  },
+  {
+    id: "sla_compliance",
+    label: "Cumprimento de SLA",
+    description: "% de tickets dentro do SLA",
+    defaultChart: "metric",
+    category: "SLA",
+  },
 ];
 
 export function getPreset(id: string): PresetMeta | undefined {
@@ -115,4 +177,5 @@ export function mockData(presetId: PresetId): {
         ],
       };
   }
+  return {};
 }

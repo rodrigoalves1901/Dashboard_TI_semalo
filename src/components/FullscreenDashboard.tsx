@@ -200,7 +200,12 @@ export function FullscreenDashboard({
               ["zoom" as never]: scale,
             }}
           >
-            <WidgetGrid key={refreshKey} widgets={widgets} editable={false} onDrilldownOpenChange={onDrilldownOpenChange} />
+            <WidgetGrid
+              key={refreshKey}
+              widgets={widgets}
+              editable={false}
+              onDrilldownOpenChange={onDrilldownOpenChange}
+            />
           </div>
         )}
       </div>

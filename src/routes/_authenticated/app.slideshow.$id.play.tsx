@@ -1,11 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  getSlideshow,
-  listSlideshowItems,
-  listDashboards,
-  type Dashboard,
-} from "@/lib/data";
+import { getSlideshow, listSlideshowItems, listDashboards, type Dashboard } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { SlideshowPlayer, type SlideshowEntry } from "@/components/SlideshowPlayer";
 import { toast } from "sonner";

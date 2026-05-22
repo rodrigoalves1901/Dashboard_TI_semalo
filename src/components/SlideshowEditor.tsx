@@ -9,6 +9,7 @@ import {
   listSlideshowItems,
   type Dashboard,
 } from "@/lib/data";
+import { listGroups, type Group } from "@/lib/rbac";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,8 @@ export function SlideshowEditor({ slideshowId }: Props) {
   const [name, setName] = useState("");
   const [defaultSeconds, setDefaultSeconds] = useState(30);
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupId, setGroupId] = useState<string>("");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,9 +35,13 @@ export function SlideshowEditor({ slideshowId }: Props) {
     const load = async () => {
       if (!currentOrg) return;
       try {
-        const ds = await listDashboards(currentOrg.id);
+        const [ds, grps] = await Promise.all([
+          listDashboards(currentOrg.id),
+          listGroups(currentOrg.id),
+        ]);
         if (cancelled) return;
         setDashboards(ds);
+        setGroups(grps);
         if (slideshowId) {
           const [s, items] = await Promise.all([
             getSlideshow(slideshowId),
@@ -44,6 +51,7 @@ export function SlideshowEditor({ slideshowId }: Props) {
           if (s) {
             setName(s.name);
             setDefaultSeconds(s.defaultSeconds);
+            setGroupId(s.groupId || "");
           }
           setEntries(items.map((it) => ({ dashboardId: it.dashboardId, seconds: it.seconds })));
         } else {
@@ -91,9 +99,9 @@ export function SlideshowEditor({ slideshowId }: Props) {
     try {
       let id = slideshowId;
       if (id) {
-        await updateSlideshow(id, { name: name.trim(), defaultSeconds });
+        await updateSlideshow(id, { name: name.trim(), defaultSeconds, groupId: groupId || null });
       } else {
-        const s = await createSlideshow(currentOrg.id, name.trim(), defaultSeconds);
+        const s = await createSlideshow(currentOrg.id, name.trim(), defaultSeconds, groupId || null);
         id = s.id;
       }
       await setSlideshowItems(id, entries);
@@ -118,7 +126,7 @@ export function SlideshowEditor({ slideshowId }: Props) {
         </h1>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_140px]">
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Nome</span>
           <input
@@ -126,6 +134,23 @@ export function SlideshowEditor({ slideshowId }: Props) {
             onChange={(e) => setName(e.target.value)}
             className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
           />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            Grupo de Acesso (Opcional)
+          </span>
+          <select
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
+          >
+            <option value="">Sem grupo (visível para todos)</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-muted-foreground">

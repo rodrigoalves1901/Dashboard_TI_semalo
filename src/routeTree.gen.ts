@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppIaRouteImport } from './routes/_authenticated/app.ia'
 import { Route as AuthenticatedAppExplorerRouteImport } from './routes/_authenticated/app.explorer'
 import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
 import { Route as AuthenticatedAppTvIndexRouteImport } from './routes/_authenticated/app.tv.index'
@@ -26,9 +27,13 @@ import { Route as AuthenticatedAppTvIdRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppSlideshowNewRouteImport } from './routes/_authenticated/app.slideshow.new'
 import { Route as AuthenticatedAppDashboardsIdRouteImport } from './routes/_authenticated/app.dashboards.$id'
 import { Route as AuthenticatedAppConnectionsNewRouteImport } from './routes/_authenticated/app.connections.new'
+import { Route as AuthenticatedAppAdminUsersRouteImport } from './routes/_authenticated/app.admin.users'
+import { Route as AuthenticatedAppAdminRolesRouteImport } from './routes/_authenticated/app.admin.roles'
+import { Route as AuthenticatedAppAdminGroupsRouteImport } from './routes/_authenticated/app.admin.groups'
 import { Route as AuthenticatedAppSlideshowIdPlayRouteImport } from './routes/_authenticated/app.slideshow.$id.play'
 import { Route as AuthenticatedAppSlideshowIdEditRouteImport } from './routes/_authenticated/app.slideshow.$id.edit'
 import { Route as AuthenticatedAppDashboardsIdEditRouteImport } from './routes/_authenticated/app.dashboards.$id.edit'
+import { Route as AuthenticatedAppConnectionsIdEditRouteImport } from './routes/_authenticated/app.connections.$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -70,6 +75,11 @@ const AuthenticatedAppSettingsRoute =
     path: '/app/settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppIaRoute = AuthenticatedAppIaRouteImport.update({
+  id: '/app/ia',
+  path: '/app/ia',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAppExplorerRoute =
   AuthenticatedAppExplorerRouteImport.update({
     id: '/app/explorer',
@@ -122,6 +132,24 @@ const AuthenticatedAppConnectionsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedAppConnectionsRoute,
   } as any)
+const AuthenticatedAppAdminUsersRoute =
+  AuthenticatedAppAdminUsersRouteImport.update({
+    id: '/app/admin/users',
+    path: '/app/admin/users',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppAdminRolesRoute =
+  AuthenticatedAppAdminRolesRouteImport.update({
+    id: '/app/admin/roles',
+    path: '/app/admin/roles',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppAdminGroupsRoute =
+  AuthenticatedAppAdminGroupsRouteImport.update({
+    id: '/app/admin/groups',
+    path: '/app/admin/groups',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppSlideshowIdPlayRoute =
   AuthenticatedAppSlideshowIdPlayRouteImport.update({
     id: '/app/slideshow/$id/play',
@@ -140,6 +168,12 @@ const AuthenticatedAppDashboardsIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedAppDashboardsIdRoute,
   } as any)
+const AuthenticatedAppConnectionsIdEditRoute =
+  AuthenticatedAppConnectionsIdEditRouteImport.update({
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AuthenticatedAppConnectionsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -149,8 +183,12 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/app/explorer': typeof AuthenticatedAppExplorerRoute
+  '/app/ia': typeof AuthenticatedAppIaRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/admin/groups': typeof AuthenticatedAppAdminGroupsRoute
+  '/app/admin/roles': typeof AuthenticatedAppAdminRolesRoute
+  '/app/admin/users': typeof AuthenticatedAppAdminUsersRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
   '/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
@@ -158,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
   '/app/slideshow/': typeof AuthenticatedAppSlideshowIndexRoute
   '/app/tv/': typeof AuthenticatedAppTvIndexRoute
+  '/app/connections/$id/edit': typeof AuthenticatedAppConnectionsIdEditRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
   '/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
   '/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
@@ -169,8 +208,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/app/explorer': typeof AuthenticatedAppExplorerRoute
+  '/app/ia': typeof AuthenticatedAppIaRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/app/admin/groups': typeof AuthenticatedAppAdminGroupsRoute
+  '/app/admin/roles': typeof AuthenticatedAppAdminRolesRoute
+  '/app/admin/users': typeof AuthenticatedAppAdminUsersRoute
   '/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
   '/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
@@ -178,6 +221,7 @@ export interface FileRoutesByTo {
   '/app/connections': typeof AuthenticatedAppConnectionsIndexRoute
   '/app/slideshow': typeof AuthenticatedAppSlideshowIndexRoute
   '/app/tv': typeof AuthenticatedAppTvIndexRoute
+  '/app/connections/$id/edit': typeof AuthenticatedAppConnectionsIdEditRoute
   '/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
   '/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
   '/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
@@ -192,8 +236,12 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRouteWithChildren
   '/_authenticated/app/explorer': typeof AuthenticatedAppExplorerRoute
+  '/_authenticated/app/ia': typeof AuthenticatedAppIaRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/admin/groups': typeof AuthenticatedAppAdminGroupsRoute
+  '/_authenticated/app/admin/roles': typeof AuthenticatedAppAdminRolesRoute
+  '/_authenticated/app/admin/users': typeof AuthenticatedAppAdminUsersRoute
   '/_authenticated/app/connections/new': typeof AuthenticatedAppConnectionsNewRoute
   '/_authenticated/app/dashboards/$id': typeof AuthenticatedAppDashboardsIdRouteWithChildren
   '/_authenticated/app/slideshow/new': typeof AuthenticatedAppSlideshowNewRoute
@@ -201,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/app/connections/': typeof AuthenticatedAppConnectionsIndexRoute
   '/_authenticated/app/slideshow/': typeof AuthenticatedAppSlideshowIndexRoute
   '/_authenticated/app/tv/': typeof AuthenticatedAppTvIndexRoute
+  '/_authenticated/app/connections/$id/edit': typeof AuthenticatedAppConnectionsIdEditRoute
   '/_authenticated/app/dashboards/$id/edit': typeof AuthenticatedAppDashboardsIdEditRoute
   '/_authenticated/app/slideshow/$id/edit': typeof AuthenticatedAppSlideshowIdEditRoute
   '/_authenticated/app/slideshow/$id/play': typeof AuthenticatedAppSlideshowIdPlayRoute
@@ -215,8 +264,12 @@ export interface FileRouteTypes {
     | '/signup'
     | '/app/connections'
     | '/app/explorer'
+    | '/app/ia'
     | '/app/settings'
     | '/app/'
+    | '/app/admin/groups'
+    | '/app/admin/roles'
+    | '/app/admin/users'
     | '/app/connections/new'
     | '/app/dashboards/$id'
     | '/app/slideshow/new'
@@ -224,6 +277,7 @@ export interface FileRouteTypes {
     | '/app/connections/'
     | '/app/slideshow/'
     | '/app/tv/'
+    | '/app/connections/$id/edit'
     | '/app/dashboards/$id/edit'
     | '/app/slideshow/$id/edit'
     | '/app/slideshow/$id/play'
@@ -235,8 +289,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/app/explorer'
+    | '/app/ia'
     | '/app/settings'
     | '/app'
+    | '/app/admin/groups'
+    | '/app/admin/roles'
+    | '/app/admin/users'
     | '/app/connections/new'
     | '/app/dashboards/$id'
     | '/app/slideshow/new'
@@ -244,6 +302,7 @@ export interface FileRouteTypes {
     | '/app/connections'
     | '/app/slideshow'
     | '/app/tv'
+    | '/app/connections/$id/edit'
     | '/app/dashboards/$id/edit'
     | '/app/slideshow/$id/edit'
     | '/app/slideshow/$id/play'
@@ -257,8 +316,12 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/app/connections'
     | '/_authenticated/app/explorer'
+    | '/_authenticated/app/ia'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
+    | '/_authenticated/app/admin/groups'
+    | '/_authenticated/app/admin/roles'
+    | '/_authenticated/app/admin/users'
     | '/_authenticated/app/connections/new'
     | '/_authenticated/app/dashboards/$id'
     | '/_authenticated/app/slideshow/new'
@@ -266,6 +329,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/connections/'
     | '/_authenticated/app/slideshow/'
     | '/_authenticated/app/tv/'
+    | '/_authenticated/app/connections/$id/edit'
     | '/_authenticated/app/dashboards/$id/edit'
     | '/_authenticated/app/slideshow/$id/edit'
     | '/_authenticated/app/slideshow/$id/play'
@@ -338,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/ia': {
+      id: '/_authenticated/app/ia'
+      path: '/app/ia'
+      fullPath: '/app/ia'
+      preLoaderRoute: typeof AuthenticatedAppIaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/explorer': {
       id: '/_authenticated/app/explorer'
       path: '/app/explorer'
@@ -401,6 +472,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppConnectionsNewRouteImport
       parentRoute: typeof AuthenticatedAppConnectionsRoute
     }
+    '/_authenticated/app/admin/users': {
+      id: '/_authenticated/app/admin/users'
+      path: '/app/admin/users'
+      fullPath: '/app/admin/users'
+      preLoaderRoute: typeof AuthenticatedAppAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/admin/roles': {
+      id: '/_authenticated/app/admin/roles'
+      path: '/app/admin/roles'
+      fullPath: '/app/admin/roles'
+      preLoaderRoute: typeof AuthenticatedAppAdminRolesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/admin/groups': {
+      id: '/_authenticated/app/admin/groups'
+      path: '/app/admin/groups'
+      fullPath: '/app/admin/groups'
+      preLoaderRoute: typeof AuthenticatedAppAdminGroupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/slideshow/$id/play': {
       id: '/_authenticated/app/slideshow/$id/play'
       path: '/app/slideshow/$id/play'
@@ -422,12 +514,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDashboardsIdEditRouteImport
       parentRoute: typeof AuthenticatedAppDashboardsIdRoute
     }
+    '/_authenticated/app/connections/$id/edit': {
+      id: '/_authenticated/app/connections/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/connections/$id/edit'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsIdEditRouteImport
+      parentRoute: typeof AuthenticatedAppConnectionsRoute
+    }
   }
 }
 
 interface AuthenticatedAppConnectionsRouteChildren {
   AuthenticatedAppConnectionsNewRoute: typeof AuthenticatedAppConnectionsNewRoute
   AuthenticatedAppConnectionsIndexRoute: typeof AuthenticatedAppConnectionsIndexRoute
+  AuthenticatedAppConnectionsIdEditRoute: typeof AuthenticatedAppConnectionsIdEditRoute
 }
 
 const AuthenticatedAppConnectionsRouteChildren: AuthenticatedAppConnectionsRouteChildren =
@@ -435,6 +535,8 @@ const AuthenticatedAppConnectionsRouteChildren: AuthenticatedAppConnectionsRoute
     AuthenticatedAppConnectionsNewRoute: AuthenticatedAppConnectionsNewRoute,
     AuthenticatedAppConnectionsIndexRoute:
       AuthenticatedAppConnectionsIndexRoute,
+    AuthenticatedAppConnectionsIdEditRoute:
+      AuthenticatedAppConnectionsIdEditRoute,
   }
 
 const AuthenticatedAppConnectionsRouteWithChildren =
@@ -460,8 +562,12 @@ const AuthenticatedAppDashboardsIdRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRouteWithChildren
   AuthenticatedAppExplorerRoute: typeof AuthenticatedAppExplorerRoute
+  AuthenticatedAppIaRoute: typeof AuthenticatedAppIaRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppAdminGroupsRoute: typeof AuthenticatedAppAdminGroupsRoute
+  AuthenticatedAppAdminRolesRoute: typeof AuthenticatedAppAdminRolesRoute
+  AuthenticatedAppAdminUsersRoute: typeof AuthenticatedAppAdminUsersRoute
   AuthenticatedAppDashboardsIdRoute: typeof AuthenticatedAppDashboardsIdRouteWithChildren
   AuthenticatedAppSlideshowNewRoute: typeof AuthenticatedAppSlideshowNewRoute
   AuthenticatedAppTvIdRoute: typeof AuthenticatedAppTvIdRoute
@@ -475,8 +581,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppConnectionsRoute:
     AuthenticatedAppConnectionsRouteWithChildren,
   AuthenticatedAppExplorerRoute: AuthenticatedAppExplorerRoute,
+  AuthenticatedAppIaRoute: AuthenticatedAppIaRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppAdminGroupsRoute: AuthenticatedAppAdminGroupsRoute,
+  AuthenticatedAppAdminRolesRoute: AuthenticatedAppAdminRolesRoute,
+  AuthenticatedAppAdminUsersRoute: AuthenticatedAppAdminUsersRoute,
   AuthenticatedAppDashboardsIdRoute:
     AuthenticatedAppDashboardsIdRouteWithChildren,
   AuthenticatedAppSlideshowNewRoute: AuthenticatedAppSlideshowNewRoute,
@@ -502,3 +612,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
