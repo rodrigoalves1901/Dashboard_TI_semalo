@@ -70,17 +70,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applySession = async (session: Session | null) => {
     let validUser: SbUser | null = session?.user ?? null;
     if (validUser) {
-      // Valida o token contra o servidor — se o usuário foi deletado, limpa a sessão.
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
-        try {
-          await supabase.auth.signOut();
-        } catch {
-          // ignore
-        }
-        validUser = null;
+      // Se estiver offline, confiamos na sessão local para não desconectar a TV por falta de internet
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        // Mantém o validUser da sessão
       } else {
-        validUser = data.user;
+        try {
+          // Valida o token contra o servidor — se o usuário foi deletado ou a sessão foi revogada, limpa.
+          const { data, error } = await supabase.auth.getUser();
+          if (error) {
+            // Ignoramos erros de rede (sem status HTTP ou status >= 500) para evitar deslogar em quedas temporárias de internet
+            const isAuthError = error.status && error.status >= 400 && error.status < 500;
+            if (isAuthError) {
+              console.warn("Sessão inválida ou expirada. Efetuando logout automático:", error);
+              await supabase.auth.signOut();
+              validUser = null;
+            } else {
+              console.warn(
+                "Erro de rede ao validar sessão, mantendo usuário conectado temporariamente:",
+                error,
+              );
+            }
+          } else if (!data.user) {
+            await supabase.auth.signOut();
+            validUser = null;
+          } else {
+            validUser = data.user;
+          }
+        } catch (e) {
+          console.error("Erro inesperado ao verificar sessão:", e);
+          // Em caso de erro inesperado/exceção, não deslogamos para ser resilientes
+        }
       }
     }
     const u = toAuthUser(validUser);

@@ -22,7 +22,9 @@ export async function fetchWidgetValue(widget: Widget): Promise<string> {
         } else if (mock.series) {
           valStr = mock.series.map((s: any) => `${s.name}: ${s.value}`).join(", ");
         } else if (mock.timeSeries) {
-          valStr = mock.timeSeries.map((t: any) => `${t.date} (Abertos: ${t.opened}, Resolvidos: ${t.solved})`).join(", ");
+          valStr = mock.timeSeries
+            .map((t: any) => `${t.date} (Abertos: ${t.opened}, Resolvidos: ${t.solved})`)
+            .join(", ");
         }
       }
     } else if (widget.connectionId && widget.content) {
@@ -39,7 +41,11 @@ export async function fetchWidgetValue(widget: Widget): Promise<string> {
           const firstRow = rawData[0];
           const val = Object.values(firstRow)[0];
           valStr = String(val ?? 0);
-        } else if (widget.chartType === "table" || widget.chartType === "donut" || widget.chartType === "bar") {
+        } else if (
+          widget.chartType === "table" ||
+          widget.chartType === "donut" ||
+          widget.chartType === "bar"
+        ) {
           if (rawData.length === 1) {
             valStr = Object.entries(rawData[0])
               .map(([k, v]) => `${k}: ${v}`)

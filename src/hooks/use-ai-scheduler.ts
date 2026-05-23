@@ -32,9 +32,14 @@ export function useAIScheduler(orgId: string | undefined) {
         const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
         // Ensure we match the time and haven't triggered in this exact minute yet
-        if (config.scheduleTimes.includes(currentTime) && lastTriggeredRef.current !== currentTime) {
+        if (
+          config.scheduleTimes.includes(currentTime) &&
+          lastTriggeredRef.current !== currentTime
+        ) {
           lastTriggeredRef.current = currentTime;
-          console.log(`[AI Scheduler] Time match found: ${currentTime}. Activating background voice report...`);
+          console.log(
+            `[AI Scheduler] Time match found: ${currentTime}. Activating background voice report...`,
+          );
 
           toast.info("🤖 IA: Iniciando narração de voz agendada...", {
             description: "Carregando dados consolidados dos widgets selecionados.",
@@ -53,7 +58,10 @@ export function useAIScheduler(orgId: string | undefined) {
           const widgetData: { title: string; value: string }[] = [];
 
           for (const widget of selectedWidgets) {
-            if (config.onlyCharts && !["bar", "line", "donut", "table", "composed"].includes(widget.chartType)) {
+            if (
+              config.onlyCharts &&
+              !["bar", "line", "donut", "table", "composed"].includes(widget.chartType)
+            ) {
               continue;
             }
             const val = await fetchWidgetValue(widget);
@@ -64,13 +72,18 @@ export function useAIScheduler(orgId: string | undefined) {
           }
 
           if (widgetData.length === 0) {
-            console.warn("[AI Scheduler] No widget data could be gathered for selected widgets after filtering.");
+            console.warn(
+              "[AI Scheduler] No widget data could be gathered for selected widgets after filtering.",
+            );
             return;
           }
 
           // 2. Request completion via secure Server Function
           const defaultPrompt = `Você é um assistente analítico de business intelligence. Com base nos dados dos widgets abaixo, gere um relatório de voz conciso e profissional em português, em no máximo 3 parágrafos. Destaque tendências importantes e alertas relevantes. Seja direto e informativo.`;
-          const instruction = config.customPrompt && config.customPrompt.trim() ? config.customPrompt.trim() : defaultPrompt;
+          const instruction =
+            config.customPrompt && config.customPrompt.trim()
+              ? config.customPrompt.trim()
+              : defaultPrompt;
           const prompt = `${instruction}\n\nDados dos widgets:\n${widgetData.map((w) => `• ${w.title}: ${w.value}`).join("\n")}`;
 
           let currentModel = config.model || "";
@@ -78,7 +91,10 @@ export function useAIScheduler(orgId: string | undefined) {
             if (currentModel === "claude-haiku-3-5" || currentModel === "claude-3-5-haiku-latest") {
               currentModel = "claude-3-5-haiku-20241022";
             }
-            if (currentModel === "claude-sonnet-4-5" || currentModel === "claude-3-5-sonnet-latest") {
+            if (
+              currentModel === "claude-sonnet-4-5" ||
+              currentModel === "claude-3-5-sonnet-latest"
+            ) {
               currentModel = "claude-3-5-sonnet-20241022";
             }
             if (currentModel === "claude-opus-4-5" || currentModel === "claude-3-opus-latest") {

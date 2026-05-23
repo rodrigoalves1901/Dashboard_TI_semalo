@@ -611,9 +611,15 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
       )}
 
       {/* Configuração de Séries */}
-      {(chartType === "bar" || chartType === "donut" || chartType === "line" || chartType === "composed" || chartType === "table") &&
+      {(chartType === "bar" ||
+        chartType === "donut" ||
+        chartType === "line" ||
+        chartType === "composed" ||
+        chartType === "table") &&
         presetId === "custom_sql" && (
-          <Field label={chartType === "table" ? "Configuração das Colunas" : "Configuração das Séries"}>
+          <Field
+            label={chartType === "table" ? "Configuração das Colunas" : "Configuração das Séries"}
+          >
             <div className="space-y-3 rounded-lg border border-border bg-card p-4">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-[11px] text-muted-foreground">
@@ -650,7 +656,11 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
                             {key}
                           </span>
                         </div>
-                        <div className={chartType === "table" ? "grid grid-cols-1" : "grid grid-cols-2 gap-3"}>
+                        <div
+                          className={
+                            chartType === "table" ? "grid grid-cols-1" : "grid grid-cols-2 gap-3"
+                          }
+                        >
                           <div className="space-y-1">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase">
                               Nome exibido

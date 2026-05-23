@@ -40,7 +40,10 @@ export const Route = createFileRoute("/_authenticated/app/ia")({
 });
 
 // ── AI Provider metadata ──────────────────────────────────────────
-const PROVIDERS: Record<AIProvider, { label: string; color: string; models: string[]; placeholder: string }> = {
+const PROVIDERS: Record<
+  AIProvider,
+  { label: string; color: string; models: string[]; placeholder: string }
+> = {
   gemini: {
     label: "Google Gemini",
     color: "#4285f4",
@@ -60,7 +63,7 @@ const PROVIDERS: Record<AIProvider, { label: string; color: string; models: stri
       "claude-3-5-sonnet-20241022",
       "claude-3-5-haiku-20241022",
       "claude-3-haiku-20240307",
-      "claude-3-opus-20240229"
+      "claude-3-opus-20240229",
     ],
     placeholder: "sk-ant-...",
   },
@@ -88,14 +91,22 @@ async function generateNarration(
   });
 }
 
-function speakText(text: string, voice: string, rate: number, pitch: number): SpeechSynthesisUtterance {
+function speakText(
+  text: string,
+  voice: string,
+  rate: number,
+  pitch: number,
+): SpeechSynthesisUtterance {
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = "pt-BR";
   utt.rate = rate;
   utt.pitch = pitch;
   const voices = window.speechSynthesis.getVoices();
-  const selected = voices.find((v) => v.name === voice) ?? voices.find((v) => v.lang.startsWith("pt")) ?? undefined;
+  const selected =
+    voices.find((v) => v.name === voice) ??
+    voices.find((v) => v.lang.startsWith("pt")) ??
+    undefined;
   if (selected) utt.voice = selected;
   window.speechSynthesis.speak(utt);
   return utt;
@@ -143,7 +154,9 @@ function AIPage() {
   // ── Load voices ──────────────────────────────────────────────────
   useEffect(() => {
     const load = () => {
-      const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith("pt") || v.lang.startsWith("en"));
+      const voices = window.speechSynthesis
+        .getVoices()
+        .filter((v) => v.lang.startsWith("pt") || v.lang.startsWith("en"));
       setAvailableVoices(voices);
     };
     load();
@@ -228,10 +241,17 @@ function AIPage() {
     setSaving(true);
     try {
       await upsertAIConfig(currentOrg.id, {
-        provider, apiKey, model, enabled,
-        scheduleTimes, selectedWidgetIds,
-        ttsVoice, ttsRate, ttsPitch,
-        customPrompt, onlyCharts,
+        provider,
+        apiKey,
+        model,
+        enabled,
+        scheduleTimes,
+        selectedWidgetIds,
+        ttsVoice,
+        ttsRate,
+        ttsPitch,
+        customPrompt,
+        onlyCharts,
       });
       toast.success("Configuração de IA salva!");
     } catch (e) {
@@ -269,7 +289,10 @@ function AIPage() {
           }
 
           if (w) {
-            if (onlyCharts && !["bar", "line", "donut", "table", "composed"].includes(w.chartType)) {
+            if (
+              onlyCharts &&
+              !["bar", "line", "donut", "table", "composed"].includes(w.chartType)
+            ) {
               continue;
             }
             const val = await fetchWidgetValue(w);
@@ -281,7 +304,9 @@ function AIPage() {
         }
 
         if (widgetData.length === 0) {
-          throw new Error("Não foi possível carregar os dados de nenhum dos widgets selecionados após a filtragem.");
+          throw new Error(
+            "Não foi possível carregar os dados de nenhum dos widgets selecionados após a filtragem.",
+          );
         }
 
         const text = await generateNarration(provider, apiKey, model, widgetData, customPrompt);
@@ -312,7 +337,6 @@ function AIPage() {
       onlyCharts,
     ],
   );
-
 
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
@@ -351,7 +375,8 @@ function AIPage() {
             <Bot size={26} className="text-primary" /> IA — Narração Inteligente
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Configure uma IA para ler e interpretar seus dashboards em voz alta em horários programados.
+            Configure uma IA para ler e interpretar seus dashboards em voz alta em horários
+            programados.
           </p>
         </div>
         <button
@@ -375,7 +400,9 @@ function AIPage() {
           </div>
           <div>
             <h2 className="text-[15px] font-bold">Provedor de IA</h2>
-            <p className="text-xs text-muted-foreground">Escolha qual IA irá gerar os insights narrados.</p>
+            <p className="text-xs text-muted-foreground">
+              Escolha qual IA irá gerar os insights narrados.
+            </p>
           </div>
         </div>
 
@@ -385,17 +412,16 @@ function AIPage() {
             <button
               key={p}
               onClick={() => onProviderChange(p)}
-              style={provider === p ? { borderColor: PROVIDERS[p].color, color: PROVIDERS[p].color } : {}}
+              style={
+                provider === p ? { borderColor: PROVIDERS[p].color, color: PROVIDERS[p].color } : {}
+              }
               className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition-all ${
                 provider === p
                   ? "bg-primary/5"
                   : "border-border text-muted-foreground hover:border-foreground/30"
               }`}
             >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: PROVIDERS[p].color }}
-              />
+              <span className="h-2 w-2 rounded-full" style={{ background: PROVIDERS[p].color }} />
               {PROVIDERS[p].label}
             </button>
           ))}
@@ -425,7 +451,9 @@ function AIPage() {
               className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:border-primary focus:outline-none"
             >
               {providerInfo.models.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
           </label>
@@ -441,7 +469,8 @@ function AIPage() {
           <div>
             <h2 className="text-[15px] font-bold">Horários de Narração</h2>
             <p className="text-xs text-muted-foreground">
-              A IA irá ler os widgets selecionados automaticamente nestes horários (enquanto o browser estiver aberto).
+              A IA irá ler os widgets selecionados automaticamente nestes horários (enquanto o
+              browser estiver aberto).
             </p>
           </div>
         </div>
@@ -454,7 +483,10 @@ function AIPage() {
             >
               <Clock size={12} className="text-muted-foreground" />
               {t}
-              <button onClick={() => removeTime(t)} className="ml-1 text-muted-foreground hover:text-destructive">
+              <button
+                onClick={() => removeTime(t)}
+                className="ml-1 text-muted-foreground hover:text-destructive"
+              >
                 <X size={12} />
               </button>
             </div>
@@ -545,7 +577,9 @@ function AIPage() {
                           ) : (
                             <Square size={16} className="shrink-0 text-muted-foreground" />
                           )}
-                          <span className={`text-sm flex-1 ${selected ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                          <span
+                            className={`text-sm flex-1 ${selected ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                          >
                             {widget.title || "(sem título)"}
                           </span>
                           <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60 bg-secondary px-2 py-0.5 rounded-full">
@@ -571,7 +605,8 @@ function AIPage() {
           <div>
             <h2 className="text-[15px] font-bold">Instruções Customizadas e Foco</h2>
             <p className="text-xs text-muted-foreground">
-              Personalize o tom e as diretrizes da IA ou limite a leitura exclusivamente a gráficos complexos.
+              Personalize o tom e as diretrizes da IA ou limite a leitura exclusivamente a gráficos
+              complexos.
             </p>
           </div>
         </div>
@@ -589,7 +624,8 @@ function AIPage() {
               className="w-full rounded-lg border border-border bg-background p-3 text-sm focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 leading-relaxed placeholder:text-muted-foreground/45"
             />
             <span className="mt-1.5 block text-[11px] leading-relaxed text-muted-foreground">
-              Se deixado em branco, a IA usará as instruções padrão para gerar uma análise geral e profissional de business intelligence.
+              Se deixado em branco, a IA usará as instruções padrão para gerar uma análise geral e
+              profissional de business intelligence.
             </span>
           </label>
 
@@ -597,7 +633,9 @@ function AIPage() {
             <div className="space-y-0.5 max-w-lg">
               <span className="block text-sm font-semibold">Análise Focada em Gráficos</span>
               <span className="block text-xs text-muted-foreground leading-relaxed">
-                Quando ativado, a IA analisará exclusivamente os widgets de tipo gráfico (barra, linha, donut, pizza, composto e tabelas), ignorando cartões de métrica simples, divisórias e blocos de texto livre.
+                Quando ativado, a IA analisará exclusivamente os widgets de tipo gráfico (barra,
+                linha, donut, pizza, composto e tabelas), ignorando cartões de métrica simples,
+                divisórias e blocos de texto livre.
               </span>
             </div>
             <button
@@ -684,7 +722,12 @@ function AIPage() {
           <button
             onClick={() => {
               setSpeaking(true);
-              const utt = speakText("Olá! Estou configurado como seu assistente de dashboard. Os dados estão sendo analisados.", ttsVoice, ttsRate, ttsPitch);
+              const utt = speakText(
+                "Olá! Estou configurado como seu assistente de dashboard. Os dados estão sendo analisados.",
+                ttsVoice,
+                ttsRate,
+                ttsPitch,
+              );
               utt.onend = () => setSpeaking(false);
             }}
             disabled={speaking}
@@ -709,7 +752,9 @@ function AIPage() {
           <h2 className="text-[13px] font-bold text-primary flex items-center gap-2">
             <Bot size={14} /> Última narração gerada
           </h2>
-          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{narrationText}</p>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+            {narrationText}
+          </p>
         </section>
       )}
 

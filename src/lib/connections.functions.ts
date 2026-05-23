@@ -2,7 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const inputSchema = z.object({
-  systemType: z.enum(["mysql", "mariadb", "sqlserver", "sharepoint", "msgraph_licenses", "bigquery", "demo"]),
+  systemType: z.enum([
+    "mysql",
+    "mariadb",
+    "sqlserver",
+    "sharepoint",
+    "msgraph_licenses",
+    "bigquery",
+    "demo",
+  ]),
   host: z.string().trim().min(0).max(500),
   port: z.number().int().min(1).max(65535),
   database: z.string().trim().min(0).max(500),
@@ -230,10 +238,7 @@ async function testMsgraphLicenses(
   };
 }
 
-async function testBigQuery(
-  data: z.infer<typeof inputSchema>,
-  start: number,
-): Promise<TestResult> {
+async function testBigQuery(data: z.infer<typeof inputSchema>, start: number): Promise<TestResult> {
   const projectId = data.database.trim();
   const jsonKey = data.password.trim();
   const dataset = data.host.trim() || undefined;
@@ -249,11 +254,17 @@ async function testBigQuery(
   try {
     credentials = JSON.parse(jsonKey);
   } catch {
-    return { ok: false, message: "JSON Key inválido — verifique se é um JSON de Service Account do Google" };
+    return {
+      ok: false,
+      message: "JSON Key inválido — verifique se é um JSON de Service Account do Google",
+    };
   }
 
   if (credentials.type !== "service_account") {
-    return { ok: false, message: "O JSON precisa ser de um Service Account (type: service_account)" };
+    return {
+      ok: false,
+      message: "O JSON precisa ser de um Service Account (type: service_account)",
+    };
   }
 
   try {
@@ -262,7 +273,11 @@ async function testBigQuery(
 
     // Lista datasets para validar o acesso
     const [datasets] = await bq.getDatasets({ maxResults: 5 });
-    const dsNames = (datasets as any[]).map((d) => d.id).filter(Boolean).slice(0, 3).join(", ");
+    const dsNames = (datasets as any[])
+      .map((d) => d.id)
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(", ");
     const extra = dataset ? ` · Dataset: ${dataset}` : dsNames ? ` · Datasets: ${dsNames}` : "";
     return {
       ok: true,

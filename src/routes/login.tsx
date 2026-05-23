@@ -201,8 +201,8 @@ function LoginPage() {
               </span>
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-slate-300">
-              Gere dashboards analíticos e relatórios estratégicos conectando suas bases de
-              dados e APIs em tempo real. Uma solução segura, robusta e configurada em poucos minutos.
+              Gere dashboards analíticos e relatórios estratégicos conectando suas bases de dados e
+              APIs em tempo real. Uma solução segura, robusta e configurada em poucos minutos.
             </p>
           </div>
         </div>

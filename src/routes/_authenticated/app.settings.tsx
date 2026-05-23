@@ -144,7 +144,9 @@ function SettingsPage() {
           </div>
           <div>
             <h2 className="text-[15px] font-bold">Alterar Senha</h2>
-            <p className="text-xs text-muted-foreground">Defina uma nova senha forte para proteger sua conta.</p>
+            <p className="text-xs text-muted-foreground">
+              Defina uma nova senha forte para proteger sua conta.
+            </p>
           </div>
         </div>
         <form onSubmit={onChangePassword} className="mt-5 space-y-4 max-w-md">

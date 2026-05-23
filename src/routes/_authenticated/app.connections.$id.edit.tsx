@@ -218,7 +218,10 @@ function EditConnectionPage() {
                 />
               </Field>
             </div>
-            <Field label="JSON Key (Service Account)" hint="Cole aqui o conteúdo completo do arquivo .json da sua Service Account">
+            <Field
+              label="JSON Key (Service Account)"
+              hint="Cole aqui o conteúdo completo do arquivo .json da sua Service Account"
+            >
               <textarea
                 required
                 value={form.password}
@@ -229,11 +232,17 @@ function EditConnectionPage() {
               />
             </Field>
             <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4 text-sm text-muted-foreground">
-              <strong className="text-foreground">Como obter o JSON Key:</strong> No Google Cloud Console, acesse{" "}
-              <em>IAM &amp; Admin → Service Accounts</em>, crie ou selecione uma conta de serviço com permissão{" "}
-              <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">BigQuery Data Viewer</code>{" "}
-              e <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">BigQuery Job User</code>,
-              depois gere uma nova chave do tipo JSON e cole o conteúdo aqui.
+              <strong className="text-foreground">Como obter o JSON Key:</strong> No Google Cloud
+              Console, acesse <em>IAM &amp; Admin → Service Accounts</em>, crie ou selecione uma
+              conta de serviço com permissão{" "}
+              <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">
+                BigQuery Data Viewer
+              </code>{" "}
+              e{" "}
+              <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">
+                BigQuery Job User
+              </code>
+              , depois gere uma nova chave do tipo JSON e cole o conteúdo aqui.
             </div>
           </>
         ) : isSharepoint || isMsGraphLicenses ? (
@@ -282,7 +291,12 @@ function EditConnectionPage() {
             </div>
             {isMsGraphLicenses && (
               <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4 text-sm text-muted-foreground mt-2">
-                <strong className="text-foreground">Dica de Permissão:</strong> O seu aplicativo registrado no Microsoft Entra ID (Azure AD) precisa da permissão do tipo aplicação <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">Organization.Read.All</code> ou similar para conseguir ler os SKUs e licenças ativas do tenant.
+                <strong className="text-foreground">Dica de Permissão:</strong> O seu aplicativo
+                registrado no Microsoft Entra ID (Azure AD) precisa da permissão do tipo aplicação{" "}
+                <code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">
+                  Organization.Read.All
+                </code>{" "}
+                ou similar para conseguir ler os SKUs e licenças ativas do tenant.
               </div>
             )}
           </>

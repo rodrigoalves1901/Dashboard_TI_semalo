@@ -5,7 +5,14 @@ export const SUPER_ADMIN_EMAIL = "contato@digitalideia.com.br";
 
 // ---- Types ----
 
-export type MenuKey = "dashboards" | "tv" | "slideshow" | "connections" | "explorer" | "settings" | "ia";
+export type MenuKey =
+  | "dashboards"
+  | "tv"
+  | "slideshow"
+  | "connections"
+  | "explorer"
+  | "settings"
+  | "ia";
 
 export type MenuPermission = {
   view: boolean;
@@ -238,7 +245,6 @@ export async function listOrgUsers(orgId: string): Promise<OrgUser[]> {
     groupName: r.groups?.name ?? null,
   }));
 }
-
 
 export async function updateOrgUser(
   id: string,

@@ -142,6 +142,7 @@ export function DrilldownTableSheet({
             ? "left-0 top-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none rounded-none border-none"
             : "max-w-5xl w-full max-h-[90vh] rounded-[14px]",
         )}
+        hideCloseButton
       >
         <DialogHeader className="border-b border-border px-5 py-3">
           <DialogTitle className="flex items-center justify-between gap-3">

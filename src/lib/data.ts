@@ -12,7 +12,14 @@ export type Org = {
   createdAt: string;
 };
 
-export type SystemType = "mysql" | "mariadb" | "sqlserver" | "sharepoint" | "msgraph_licenses" | "bigquery" | "demo";
+export type SystemType =
+  | "mysql"
+  | "mariadb"
+  | "sqlserver"
+  | "sharepoint"
+  | "msgraph_licenses"
+  | "bigquery"
+  | "demo";
 
 export type Connection = {
   id: string;
@@ -237,7 +244,9 @@ function mapConnection(r: any): Connection {
 }
 
 export async function listDashboards(orgId: string): Promise<Dashboard[]> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   if (user.email === SUPER_ADMIN_EMAIL) {
@@ -286,7 +295,9 @@ export async function listDashboards(orgId: string): Promise<Dashboard[]> {
 }
 
 export async function getDashboard(id: string): Promise<Dashboard | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data, error } = await supabase.from("dashboards").select("*").eq("id", id).maybeSingle();
@@ -688,7 +699,9 @@ function mapSlideshowItem(r: any): SlideshowItem {
 }
 
 export async function listSlideshows(orgId: string): Promise<Slideshow[]> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   if (user.email === SUPER_ADMIN_EMAIL) {
@@ -734,7 +747,9 @@ export async function listSlideshows(orgId: string): Promise<Slideshow[]> {
 }
 
 export async function getSlideshow(id: string): Promise<Slideshow | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data, error } = await supabase.from("slideshows").select("*").eq("id", id).maybeSingle();
@@ -906,8 +921,8 @@ export type AIConfig = {
   apiKey: string;
   model: string;
   enabled: boolean;
-  scheduleTimes: string[];       // ["08:00", "18:00"]
-  selectedWidgetIds: string[];   // widget IDs to be read aloud
+  scheduleTimes: string[]; // ["08:00", "18:00"]
+  selectedWidgetIds: string[]; // widget IDs to be read aloud
   ttsVoice: string;
   ttsRate: number;
   ttsPitch: number;
@@ -969,4 +984,3 @@ export async function upsertAIConfig(
   if (error) throw new Error(error.message);
   return mapAIConfig(data as Record<string, unknown>);
 }
-

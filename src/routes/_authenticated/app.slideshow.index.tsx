@@ -85,50 +85,47 @@ function SlideshowIndex() {
           {items.map((s) => {
             const g = s.groupId ? groupMap.get(s.groupId) : null;
             return (
-              <div key={s.id} className="rounded-[14px] border border-border bg-card p-5 shadow-card">
+              <div
+                key={s.id}
+                className="rounded-[14px] border border-border bg-card p-5 shadow-card"
+              >
                 <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
                   <PlayCircle size={18} />
                 </div>
                 <h3 className="mt-4 text-base font-bold">{s.name}</h3>
                 <div className="mt-1 flex flex-col gap-0.5">
-                  <p className="text-xs text-muted-foreground">
-                    Tempo padrão: {s.defaultSeconds}s
-                  </p>
-                  {g && (
-                    <p className="text-xs text-primary font-medium">
-                      Grupo: {g.name}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground">Tempo padrão: {s.defaultSeconds}s</p>
+                  {g && <p className="text-xs text-primary font-medium">Grupo: {g.name}</p>}
                 </div>
                 <div className="mt-4 flex gap-2">
-                <Link
-                  to="/app/slideshow/$id/play"
-                  params={{ id: s.id }}
-                  className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-primary text-xs font-semibold text-primary-foreground hover:opacity-90"
-                >
-                  <Play size={14} /> Reproduzir
-                </Link>
-                {can("slideshow", "edit") && (
-                  <>
-                    <Link
-                      to="/app/slideshow/$id/edit"
-                      params={{ id: s.id }}
-                      className="inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-secondary"
-                    >
-                      <Pencil size={13} />
-                    </Link>
-                    <button
-                      onClick={() => remove(s.id)}
-                      className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-xs font-semibold text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </>
-                )}
+                  <Link
+                    to="/app/slideshow/$id/play"
+                    params={{ id: s.id }}
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg bg-primary text-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    <Play size={14} /> Reproduzir
+                  </Link>
+                  {can("slideshow", "edit") && (
+                    <>
+                      <Link
+                        to="/app/slideshow/$id/edit"
+                        params={{ id: s.id }}
+                        className="inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-secondary"
+                      >
+                        <Pencil size={13} />
+                      </Link>
+                      <button
+                        onClick={() => remove(s.id)}
+                        className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       )}
     </div>

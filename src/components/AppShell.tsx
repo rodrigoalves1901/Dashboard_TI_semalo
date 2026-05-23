@@ -36,7 +36,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const nav = [
-  { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true, menuKey: "dashboards" as const },
+  {
+    to: "/app",
+    label: "Dashboards",
+    icon: LayoutDashboard,
+    exact: true,
+    menuKey: "dashboards" as const,
+  },
   { to: "/app/tv", label: "Modo TV", icon: Tv, menuKey: "tv" as const },
   { to: "/app/slideshow", label: "Slideshow", icon: PlayCircle, menuKey: "slideshow" as const },
   { to: "/app/connections", label: "Conexões", icon: Database, menuKey: "connections" as const },
@@ -64,7 +70,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   useAIScheduler(currentOrg?.id);
 
   const visibleNav = nav.filter((item) => can(item.menuKey, "view"));
-
 
   const [collapsed, setCollapsed] = useState<boolean>(false);
   useEffect(() => {

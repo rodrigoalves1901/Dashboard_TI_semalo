@@ -101,7 +101,12 @@ export function SlideshowEditor({ slideshowId }: Props) {
       if (id) {
         await updateSlideshow(id, { name: name.trim(), defaultSeconds, groupId: groupId || null });
       } else {
-        const s = await createSlideshow(currentOrg.id, name.trim(), defaultSeconds, groupId || null);
+        const s = await createSlideshow(
+          currentOrg.id,
+          name.trim(),
+          defaultSeconds,
+          groupId || null,
+        );
         id = s.id;
       }
       await setSlideshowItems(id, entries);

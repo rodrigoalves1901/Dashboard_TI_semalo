@@ -14,13 +14,25 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { usePermissions } from "@/hooks/use-permissions";
 
 const primary = [
-  { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true, menuKey: "dashboards" as const },
+  {
+    to: "/app",
+    label: "Dashboards",
+    icon: LayoutDashboard,
+    exact: true,
+    menuKey: "dashboards" as const,
+  },
   { to: "/app/connections", label: "Conexões", icon: Database, menuKey: "connections" as const },
   { to: "/app/tv", label: "Modo TV", icon: Tv, menuKey: "tv" as const },
 ];
 
 const more = [
-  { to: "/app", label: "Dashboards", icon: LayoutDashboard, exact: true, menuKey: "dashboards" as const },
+  {
+    to: "/app",
+    label: "Dashboards",
+    icon: LayoutDashboard,
+    exact: true,
+    menuKey: "dashboards" as const,
+  },
   { to: "/app/connections", label: "Conexões", icon: Database, menuKey: "connections" as const },
   { to: "/app/tv", label: "Modo TV", icon: Tv, menuKey: "tv" as const },
   { to: "/app/slideshow", label: "Slideshow", icon: PlayCircle, menuKey: "slideshow" as const },
