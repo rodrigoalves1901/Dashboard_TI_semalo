@@ -10,12 +10,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 8087,
-    allowedHosts: ["digitaldash.refriko.corp"],
+    allowedHosts: ["digitaldash.refriko.corp", "192.168.50.5",],
   },
 
   preview: {
     host: true,
     port: 8087,
-    allowedHosts: ["digitaldash.refriko.corp"],
+    allowedHosts: ["digitaldash.refriko.corp", "192.168.50.5",],
   },
 });
