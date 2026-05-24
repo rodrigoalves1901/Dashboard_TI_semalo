@@ -18,6 +18,7 @@ import {
   YAxis,
   LabelList,
   ComposedChart,
+  ReferenceLine,
   type BarShapeProps,
 } from "recharts";
 import { mockData, type PresetId } from "@/lib/glpi-presets";
@@ -27,42 +28,20 @@ import type { ChartType, WidgetStyles } from "@/lib/data";
 import { evaluateAlert, type AlertRule } from "@/lib/alert-rule";
 import { runExplorerQuery } from "@/lib/explorer.functions";
 
-// Custom bar shape that supports the "alert-blink" CSS animation per cell.
-interface BlinkingBarProps {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  fill?: string;
-  blink?: boolean;
-  radius?: number | [number, number, number, number];
-}
+import { Rectangle } from "recharts";
 
-function BlinkingBar({
-  x = 0,
-  y = 0,
-  width = 0,
-  height = 0,
-  fill,
-  blink,
-  radius,
-}: BlinkingBarProps) {
-  if (height <= 0 || width <= 0) return null;
+function BlinkingBar(props: any) {
+  const { blink, className, radius, ...rest } = props;
 
   // Compute border-radius from recharts radius prop (top-left, top-right)
   const r = Array.isArray(radius) ? radius[0] : (radius ?? 0);
-  const rx = Math.min(r, width / 2, height / 2);
+  const rx = Math.min(r, (rest.width || 0) / 2, (rest.height || 0) / 2);
 
   return (
-    <rect
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      fill={fill}
-      rx={rx}
-      ry={rx}
-      className={blink ? "alert-blink" : undefined}
+    <Rectangle
+      {...rest}
+      radius={[rx, rx, 0, 0]}
+      className={cn(className, blink ? "alert-blink" : undefined)}
     />
   );
 }
@@ -534,49 +513,64 @@ export function WidgetRenderer({
           <table className="w-full min-w-max text-sm table-auto">
             <thead className="sticky top-0 bg-surface-muted text-xs font-semibold text-muted-foreground z-10">
               <tr>
-                {visibleColumns.map((col) => (
-                  <th
-                    key={col}
-                    className={cn(
-                      "px-3 py-2 text-muted-foreground bg-surface-muted",
-                      isColNumeric(col) ? "text-right" : "text-left",
-                    )}
-                  >
-                    {getColumnLabel(col)}
-                  </th>
-                ))}
+                {visibleColumns.length > 0 ? (
+                  visibleColumns.map((col) => (
+                    <th
+                      key={col}
+                      className={cn(
+                        "px-3 py-2 text-muted-foreground bg-surface-muted",
+                        isColNumeric(col) ? "text-right" : "text-left",
+                      )}
+                    >
+                      {getColumnLabel(col)}
+                    </th>
+                  ))
+                ) : (
+                  <th className="px-3 py-2 text-left">Nenhum dado retornado</th>
+                )}
               </tr>
             </thead>
             <tbody>
-              {(data.series as Record<string, unknown>[]).map((r, idx) => {
-                const keyVal = r.id || r.name || idx;
-                return (
-                  <tr
-                    key={String(keyVal)}
-                    onClick={clickable ? () => handleRowClick(r) : undefined}
-                    className={cn(
-                      "border-t border-border-soft",
-                      clickable ? "cursor-pointer hover:bg-secondary/60" : "",
-                    )}
+              {(data.series as Record<string, unknown>[]).length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={Math.max(1, visibleColumns.length)}
+                    className="px-3 py-6 text-center text-sm text-muted-foreground"
                   >
-                    {visibleColumns.map((col) => {
-                      const val = r[col];
-                      const isNumeric = isColNumeric(col);
-                      return (
-                        <td
-                          key={col}
-                          className={cn(
-                            "px-3 py-2 text-foreground",
-                            isNumeric ? "text-right font-semibold" : "text-left",
-                          )}
-                        >
-                          {val !== null && val !== undefined ? String(val) : "-"}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+                    Nenhum dado retornado para esta consulta.
+                  </td>
+                </tr>
+              ) : (
+                (data.series as Record<string, unknown>[]).map((r, idx) => {
+                  const keyVal = r.id || r.name || idx;
+                  return (
+                    <tr
+                      key={String(keyVal)}
+                      onClick={clickable ? () => handleRowClick(r) : undefined}
+                      className={cn(
+                        "border-t border-border-soft",
+                        clickable ? "cursor-pointer hover:bg-secondary/60" : "",
+                      )}
+                    >
+                      {visibleColumns.map((col) => {
+                        const val = r[col];
+                        const isNumeric = isColNumeric(col);
+                        return (
+                          <td
+                            key={col}
+                            className={cn(
+                              "px-3 py-2 text-foreground",
+                              isNumeric ? "text-right font-semibold" : "text-left",
+                            )}
+                          >
+                            {val !== null && val !== undefined ? String(val) : "-"}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -636,12 +630,18 @@ export function WidgetRenderer({
                 }
               />
               <YAxis
-                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.15 || 10)]}
+                domain={[
+                  (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.15) : 0),
+                  (dataMax: number) => Math.ceil(dataMax * 1.15 || 10),
+                ]}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)" }} />
+              {data.series.some((d: any) => Number(d.value) < 0) && (
+                <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="3 3" />
+              )}
               <Bar
                 dataKey="value"
                 radius={[4, 4, 0, 0]}
@@ -664,7 +664,9 @@ export function WidgetRenderer({
                   const originalKey = entry?.originalKey as string | undefined;
                   const mapping = originalKey ? styles.seriesMapping?.[originalKey] : undefined;
                   const idx = shapeProps.index ?? 0;
-                  const fillColor = mapping?.color || CHART_COLORS[idx % CHART_COLORS.length];
+                  const val = Number(shapeProps.value ?? entry?.value ?? 0);
+                  const defaultColor = val < 0 ? "var(--destructive)" : CHART_COLORS[idx % CHART_COLORS.length];
+                  const fillColor = mapping?.color || defaultColor;
                   return (
                     <BlinkingBar
                       x={shapeProps.x ?? 0}
@@ -801,7 +803,10 @@ export function WidgetRenderer({
               />
               <YAxis
                 yAxisId="left"
-                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.35 || 10)]}
+                domain={[
+                  (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.35) : 0),
+                  (dataMax: number) => Math.ceil(dataMax * 1.35 || 10),
+                ]}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
                 tickLine={false}
                 axisLine={false}
@@ -809,7 +814,10 @@ export function WidgetRenderer({
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                domain={isPercentageZeroToOne ? [0, 1.1] : [0, 110]}
+                domain={[
+                  (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.1) : 0),
+                  isPercentageZeroToOne ? 1.1 : (dataMax: number) => Math.ceil(dataMax * 1.1 || 110),
+                ]}
                 tickFormatter={(v) => (isPercentageZeroToOne ? `${Math.round(v * 100)}%` : `${v}%`)}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
                 tickLine={false}
@@ -817,6 +825,9 @@ export function WidgetRenderer({
               />
               <Tooltip contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
+              {data.series.some((d: any) => Object.values(d).some((v) => typeof v === "number" && v < 0)) && (
+                <ReferenceLine y={0} yAxisId="left" stroke="var(--border)" strokeDasharray="3 3" />
+              )}
 
               {/* Renderiza as barras */}
               {(() => {

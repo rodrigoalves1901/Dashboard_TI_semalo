@@ -174,15 +174,7 @@ export function FullscreenDashboard({
           >
             ⛶
           </button>
-          {onExit && (
-            <button
-              onClick={handleExit}
-              aria-label="Sair"
-              className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <X size={14} />
-            </button>
-          )}
+
         </header>
       )}
 

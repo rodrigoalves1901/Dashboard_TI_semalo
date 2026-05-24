@@ -6,7 +6,16 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tanstackStart(), react(), tailwindcss(), tsconfigPaths()],
+
   server: {
     host: true,
+    port: 8087,
+    allowedHosts: ["digitaldash.refriko.corp"],
+  },
+
+  preview: {
+    host: true,
+    port: 8087,
+    allowedHosts: ["digitaldash.refriko.corp"],
   },
 });
