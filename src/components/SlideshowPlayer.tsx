@@ -17,39 +17,11 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [drilldownOpen, setDrilldownOpen] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
-  const startedAt = useRef<number>(Date.now());
   const autoPaused = paused || drilldownOpen;
 
   const current = entries[index];
   const totalMs = (current?.seconds ?? 30) * 1000;
-
-  // Reset timer when slide changes
-  useEffect(() => {
-    startedAt.current = Date.now();
-    setElapsedMs(0);
-  }, [index]);
-
-  // Tick
-  useEffect(() => {
-    if (autoPaused || entries.length === 0) return;
-    const id = setInterval(() => {
-      const e = Date.now() - startedAt.current;
-      if (e >= totalMs) {
-        setIndex((i) => (i + 1) % entries.length);
-      } else {
-        setElapsedMs(e);
-      }
-    }, 100);
-    return () => clearInterval(id);
-  }, [autoPaused, totalMs, entries.length, index]);
-
-  // Pause adjusts startedAt to keep elapsed correct on resume
-  useEffect(() => {
-    if (autoPaused) return;
-    startedAt.current = Date.now() - elapsedMs;
-  }, [autoPaused]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = () => setIndex((i) => (i + 1) % entries.length);
   const prev = () => setIndex((i) => (i - 1 + entries.length) % entries.length);
@@ -67,7 +39,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onExit, entries.length]);
+  }, [onExit, entries.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!current) {
     return (
@@ -76,8 +48,6 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
       </div>
     );
   }
-
-  const progress = Math.min(100, (elapsedMs / totalMs) * 100);
 
   return (
     <>
@@ -88,12 +58,7 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
         onDrilldownOpenChange={setDrilldownOpen}
       />
       {/* Top progress bar (slideshow) */}
-      <div className="fixed top-0 left-0 right-0 z-[120] h-1 bg-border/40">
-        <div
-          className="h-full bg-primary transition-[width] duration-100 ease-linear"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <SlideshowProgressBar totalMs={totalMs} autoPaused={autoPaused} onTimeout={next} />
 
       {/* Top-right info */}
       <div className="fixed top-2 right-2 z-[120] flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-popover backdrop-blur">
@@ -149,5 +114,55 @@ export function SlideshowPlayer({ entries, onExit }: Props) {
         )}
       </div>
     </>
+  );
+}
+
+function SlideshowProgressBar({
+  totalMs,
+  autoPaused,
+  onTimeout,
+}: {
+  totalMs: number;
+  autoPaused: boolean;
+  onTimeout: () => void;
+}) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const startedAt = useRef<number>(Date.now());
+
+  // Reset timer when slide changes
+  useEffect(() => {
+    startedAt.current = Date.now();
+    setElapsedMs(0);
+  }, [totalMs]);
+
+  // Tick
+  useEffect(() => {
+    if (autoPaused) return;
+    const id = setInterval(() => {
+      const e = Date.now() - startedAt.current;
+      if (e >= totalMs) {
+        onTimeout();
+      } else {
+        setElapsedMs(e);
+      }
+    }, 100);
+    return () => clearInterval(id);
+  }, [autoPaused, totalMs, onTimeout]);
+
+  // Pause adjusts startedAt to keep elapsed correct on resume
+  useEffect(() => {
+    if (autoPaused) return;
+    startedAt.current = Date.now() - elapsedMs;
+  }, [autoPaused]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const progress = Math.min(100, (elapsedMs / totalMs) * 100);
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[120] h-1 bg-border/40">
+      <div
+        className="h-full bg-primary transition-[width] duration-100 ease-linear"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
   );
 }

@@ -197,7 +197,9 @@ export function FullscreenDashboard({
           <div
             style={{
               fontSize: `${scale}rem`,
-              ["zoom" as never]: scale,
+              transform: scale !== 1 ? `scale(${scale})` : undefined,
+              transformOrigin: "top left",
+              width: scale !== 1 ? `${100 / scale}%` : "100%",
             }}
           >
             <WidgetGrid
