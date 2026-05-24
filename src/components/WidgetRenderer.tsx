@@ -18,6 +18,7 @@ import {
   YAxis,
   LabelList,
   ComposedChart,
+  type BarShapeProps,
 } from "recharts";
 import { mockData, type PresetId } from "@/lib/glpi-presets";
 import { MetricCard } from "./MetricCard";
@@ -25,6 +26,46 @@ import { cn } from "@/lib/utils";
 import type { ChartType, WidgetStyles } from "@/lib/data";
 import { evaluateAlert, type AlertRule } from "@/lib/alert-rule";
 import { runExplorerQuery } from "@/lib/explorer.functions";
+
+// Custom bar shape that supports the "alert-blink" CSS animation per cell.
+interface BlinkingBarProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  fill?: string;
+  blink?: boolean;
+  radius?: number | [number, number, number, number];
+}
+
+function BlinkingBar({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  fill,
+  blink,
+  radius,
+}: BlinkingBarProps) {
+  if (height <= 0 || width <= 0) return null;
+
+  // Compute border-radius from recharts radius prop (top-left, top-right)
+  const r = Array.isArray(radius) ? radius[0] : (radius ?? 0);
+  const rx = Math.min(r, width / 2, height / 2);
+
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={fill}
+      rx={rx}
+      ry={rx}
+      className={blink ? "alert-blink" : undefined}
+    />
+  );
+}
 
 function abbreviateName(name: string): string {
   if (!name) return "";
@@ -618,17 +659,25 @@ export function WidgetRenderer({
                       }
                     : undefined
                 }
-              >
-                {(data.series as Record<string, unknown>[]).map((entry, index) => {
-                  const originalKey = entry.originalKey as string | undefined;
+                shape={(shapeProps: BarShapeProps) => {
+                  const entry = shapeProps.payload as Record<string, unknown> | undefined;
+                  const originalKey = entry?.originalKey as string | undefined;
                   const mapping = originalKey ? styles.seriesMapping?.[originalKey] : undefined;
+                  const idx = shapeProps.index ?? 0;
+                  const fillColor = mapping?.color || CHART_COLORS[idx % CHART_COLORS.length];
                   return (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={mapping?.color || CHART_COLORS[index % CHART_COLORS.length]}
+                    <BlinkingBar
+                      x={shapeProps.x ?? 0}
+                      y={shapeProps.y ?? 0}
+                      width={shapeProps.width ?? 0}
+                      height={shapeProps.height ?? 0}
+                      fill={fillColor}
+                      blink={mapping?.blink}
+                      radius={[4, 4, 0, 0]}
                     />
                   );
-                })}
+                }}
+              >
                 {styles.showValues && (
                   <LabelList
                     dataKey="value"

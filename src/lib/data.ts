@@ -69,7 +69,7 @@ export type WidgetStyles = {
   showValues?: boolean;
   seriesMapping?: Record<
     string,
-    { label?: string; color?: string; hidden?: boolean; showInFooter?: boolean }
+    { label?: string; color?: string; hidden?: boolean; showInFooter?: boolean; blink?: boolean }
   >;
   barSize?: number;
   barCategoryGap?: number;

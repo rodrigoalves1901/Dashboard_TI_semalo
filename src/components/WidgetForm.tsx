@@ -58,7 +58,12 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
   const [styles, setStyles] = useState(initialData?.styles || {});
   const [saving, setSaving] = useState(false);
   const [customMetrics, setCustomMetrics] = useState<CustomMetric[]>([]);
-  const [sqlKeys, setSqlKeys] = useState<string[]>([]);
+  const [sqlKeys, setSqlKeys] = useState<string[]>(() => {
+    if (initialData?.styles?.seriesMapping) {
+      return Object.keys(initialData.styles.seriesMapping);
+    }
+    return [];
+  });
   const [loadingKeys, setLoadingKeys] = useState(false);
   const { currentOrg } = useAuth();
 
@@ -132,8 +137,21 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
     try {
       const { runExplorerQuery } = await import("@/lib/explorer.functions");
       const res = await runExplorerQuery({ data: { connectionId, query: content } });
-      if (res && res[0]) {
-        setSqlKeys(Object.keys(res[0]));
+      if (res && res.length > 0) {
+        if (chartType === "table" || chartType === "composed" || chartType === "line") {
+          setSqlKeys(Object.keys(res[0]));
+        } else {
+          // Para gráficos de barras ou de donut
+          if (res.length === 1 && Object.keys(res[0]).length > 1) {
+            setSqlKeys(Object.keys(res[0]));
+          } else {
+            const rowKeys = res.map((r) => {
+              const val = Object.values(r)[0];
+              return val === null || val === undefined ? "null" : String(val);
+            });
+            setSqlKeys(Array.from(new Set(rowKeys)));
+          }
+        }
       }
     } catch (err) {
       toast.error("Não foi possível carregar colunas: " + (err as Error).message);
@@ -144,7 +162,13 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
 
   const updateSeriesMapping = (
     key: string,
-    updates: { label?: string; color?: string; hidden?: boolean; showInFooter?: boolean },
+    updates: {
+      label?: string;
+      color?: string;
+      hidden?: boolean;
+      showInFooter?: boolean;
+      blink?: boolean;
+    },
   ) => {
     setStyles((s) => ({
       ...s,
@@ -653,7 +677,13 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-[10px] font-bold text-muted-foreground">
-                            {key}
+                            {key === ""
+                              ? "(Vazio)"
+                              : key === "null"
+                                ? "(Nulo)"
+                                : key === "undefined"
+                                  ? "(Indefinido)"
+                                  : key}
                           </span>
                         </div>
                         <div
@@ -705,7 +735,7 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
                           )}
                         </div>
 
-                        <div className="flex gap-3 pt-1 border-t border-border/30 mt-1">
+                        <div className="flex gap-3 pt-1 border-t border-border/30 mt-1 flex-wrap">
                           <button
                             type="button"
                             onClick={() => updateSeriesMapping(key, { hidden: !map.hidden })}
@@ -752,6 +782,32 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
                                 {map.showInFooter && <Check size={10} className="text-white" />}
                               </div>
                               Exibir no rodapé
+                            </button>
+                          )}
+                          {(chartType === "bar" ||
+                            chartType === "donut" ||
+                            chartType === "composed") && (
+                            <button
+                              type="button"
+                              onClick={() => updateSeriesMapping(key, { blink: !map.blink })}
+                              className={cn(
+                                "flex items-center gap-1.5 text-[10px] font-medium transition-colors",
+                                map.blink
+                                  ? "text-destructive"
+                                  : "text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "h-3 w-3 rounded-sm border",
+                                  map.blink
+                                    ? "bg-destructive border-destructive"
+                                    : "border-muted-foreground",
+                                )}
+                              >
+                                {map.blink && <Check size={10} className="text-white" />}
+                              </div>
+                              ⚡ Piscar barra (alerta)
                             </button>
                           )}
                         </div>
