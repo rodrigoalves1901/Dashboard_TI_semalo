@@ -123,6 +123,8 @@ interface UnifiedWidgetData {
   deltaValue?: number;
   footerData?: Record<string, unknown>;
   series?: Record<string, unknown>[];
+  /** Unique series keys produced by pivot grouping (grouped/stacked bar) */
+  groupKeys?: string[];
   timeSeries?: {
     date: string;
     opened: number;
@@ -163,6 +165,7 @@ export function WidgetRenderer({
       delta?: number;
       deltaValue?: number;
       series?: Record<string, unknown>[];
+      groupKeys?: string[];
       timeSeries?: {
         date: string;
         opened: number;
@@ -252,7 +255,6 @@ export function WidgetRenderer({
         transformed.series = Object.entries(res[0])
           .filter(([key]) => {
             const mapping = styles.seriesMapping?.[key];
-            // Oculta se estiver marcado como oculto OU se for uma chave de rodapé padrão (sem config explícita de NÃO ocultar)
             if (mapping?.hidden) return false;
             if (footerKeys.includes(key.toLowerCase()) && !mapping) return false;
             return true;
@@ -266,6 +268,41 @@ export function WidgetRenderer({
               originalKey: key,
             };
           });
+      } else if (
+        chartType === "bar" &&
+        styles.barGroupMode &&
+        styles.barGroupMode !== "simple" &&
+        res.length > 0 &&
+        Object.keys(res[0]).length >= 3
+      ) {
+        // Modo pivot: col1 = eixo X, col2 = série (agrupador), col3 = valor
+        const keys = Object.keys(res[0]);
+        const xKey = keys[0];
+        const groupKey = keys[1];
+        const valueKey = keys[2];
+
+        // Coleta todos os grupos únicos (col2) preservando ordem
+        const allGroups = Array.from(
+          new Set(res.map((r) => String((r as Record<string, unknown>)[groupKey] ?? ""))),
+        );
+
+        // Monta pivot: { [xValue]: { [groupValue]: number } }
+        const pivotMap: Map<string, Record<string, number>> = new Map();
+        for (const r of res) {
+          const row = r as Record<string, unknown>;
+          const xVal = String(row[xKey] ?? "");
+          const gVal = String(row[groupKey] ?? "");
+          const numVal = Number(row[valueKey] ?? 0);
+          if (!pivotMap.has(xVal)) pivotMap.set(xVal, {});
+          pivotMap.get(xVal)![gVal] = numVal;
+        }
+
+        transformed.series = Array.from(pivotMap.entries()).map(([xVal, vals]) => {
+          const item: Record<string, unknown> = { name: xVal };
+          for (const g of allGroups) item[g] = vals[g] ?? 0;
+          return item;
+        });
+        transformed.groupKeys = allGroups;
       } else {
         // Caso padrão: Múltiplas linhas
         transformed.series = res
@@ -609,6 +646,7 @@ export function WidgetRenderer({
               barCategoryGap={
                 styles.barCategoryGap !== undefined ? `${styles.barCategoryGap}%` : undefined
               }
+              stackOffset={styles.barGroupMode === "stacked" ? "none" : undefined}
             >
               <CartesianGrid stroke="var(--border-soft)" vertical={false} />
               <XAxis
@@ -639,55 +677,103 @@ export function WidgetRenderer({
                 axisLine={false}
               />
               <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)" }} />
+              {data.groupKeys && data.groupKeys.length > 0 && (
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+              )}
               {data.series.some((d: any) => Number(d.value) < 0) && (
                 <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="3 3" />
               )}
-              <Bar
-                dataKey="value"
-                radius={[4, 4, 0, 0]}
-                barSize={styles.barSize}
-                isAnimationActive={!styles.disableAnimations}
-                cursor={clickable ? "pointer" : undefined}
-                onClick={
-                  clickable
-                    ? (d) => {
-                        const payload = d as { name?: string; value?: number };
-                        onDrilldown?.({
-                          name: String(payload?.name ?? ""),
-                          value: Number(payload?.value ?? 0),
-                        });
-                      }
-                    : undefined
-                }
-                shape={(shapeProps: BarShapeProps) => {
-                  const entry = shapeProps.payload as Record<string, unknown> | undefined;
-                  const originalKey = entry?.originalKey as string | undefined;
-                  const mapping = originalKey ? styles.seriesMapping?.[originalKey] : undefined;
-                  const idx = shapeProps.index ?? 0;
-                  const val = Number(shapeProps.value ?? entry?.value ?? 0);
-                  const defaultColor = val < 0 ? "var(--destructive)" : CHART_COLORS[idx % CHART_COLORS.length];
-                  const fillColor = mapping?.color || defaultColor;
-                  return (
-                    <BlinkingBar
-                      x={shapeProps.x ?? 0}
-                      y={shapeProps.y ?? 0}
-                      width={shapeProps.width ?? 0}
-                      height={shapeProps.height ?? 0}
-                      fill={fillColor}
-                      blink={mapping?.blink}
+              {data.groupKeys && data.groupKeys.length > 0
+                ? // Modo agrupado/empilhado: múltiplas barras via pivot
+                  data.groupKeys.map((gk, gIdx) => {
+                    const mapping = styles.seriesMapping?.[gk];
+                    if (mapping?.hidden) return null;
+                    const fillColor = mapping?.color || CHART_COLORS[gIdx % CHART_COLORS.length];
+                    const displayName =
+                      mapping?.label || (gk === "" ? "(Vazio)" : gk === "null" ? "(Nulo)" : gk);
+                    return (
+                      <Bar
+                        key={gk}
+                        dataKey={gk}
+                        name={displayName}
+                        fill={fillColor}
+                        radius={styles.barGroupMode === "stacked" ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+                        barSize={styles.barSize}
+                        stackId={styles.barGroupMode === "stacked" ? "stack" : undefined}
+                        isAnimationActive={!styles.disableAnimations}
+                      >
+                        {styles.showValues && (
+                          <LabelList
+                            dataKey={gk}
+                            position={styles.barGroupMode === "stacked" ? "inside" : "top"}
+                            style={{
+                              fill:
+                                styles.barGroupMode === "stacked" ? "#fff" : "var(--foreground)",
+                              fontSize: 10,
+                              fontWeight: "bold",
+                            }}
+                          />
+                        )}
+                      </Bar>
+                    );
+                  })
+                : // Modo simples: barra única por linha
+                  [
+                    <Bar
+                      key="single"
+                      dataKey="value"
                       radius={[4, 4, 0, 0]}
-                    />
-                  );
-                }}
-              >
-                {styles.showValues && (
-                  <LabelList
-                    dataKey="value"
-                    position="top"
-                    style={{ fill: "var(--foreground)", fontSize: 11, fontWeight: "bold" }}
-                  />
-                )}
-              </Bar>
+                      barSize={styles.barSize}
+                      isAnimationActive={!styles.disableAnimations}
+                      cursor={clickable ? "pointer" : undefined}
+                      onClick={
+                        clickable
+                          ? (d) => {
+                              const payload = d as { name?: string; value?: number };
+                              onDrilldown?.({
+                                name: String(payload?.name ?? ""),
+                                value: Number(payload?.value ?? 0),
+                              });
+                            }
+                          : undefined
+                      }
+                      shape={(shapeProps: BarShapeProps) => {
+                        const entry = shapeProps.payload as Record<string, unknown> | undefined;
+                        const originalKey = entry?.originalKey as string | undefined;
+                        const mapping = originalKey
+                          ? styles.seriesMapping?.[originalKey]
+                          : undefined;
+                        const idx = shapeProps.index ?? 0;
+                        const val = Number(shapeProps.value ?? entry?.value ?? 0);
+                        const defaultColor =
+                          val < 0 ? "var(--destructive)" : CHART_COLORS[idx % CHART_COLORS.length];
+                        const fillColor = mapping?.color || defaultColor;
+                        return (
+                          <BlinkingBar
+                            x={shapeProps.x ?? 0}
+                            y={shapeProps.y ?? 0}
+                            width={shapeProps.width ?? 0}
+                            height={shapeProps.height ?? 0}
+                            fill={fillColor}
+                            blink={mapping?.blink}
+                            radius={[4, 4, 0, 0]}
+                          />
+                        );
+                      }}
+                    >
+                      {styles.showValues && (
+                        <LabelList
+                          dataKey="value"
+                          position="top"
+                          style={{
+                            fill: "var(--foreground)",
+                            fontSize: 11,
+                            fontWeight: "bold",
+                          }}
+                        />
+                      )}
+                    </Bar>,
+                  ]}
             </BarChart>
           ) : chartType === "line" && data.timeSeries ? (
             <LineChart
@@ -816,7 +902,9 @@ export function WidgetRenderer({
                 orientation="right"
                 domain={[
                   (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.1) : 0),
-                  isPercentageZeroToOne ? 1.1 : (dataMax: number) => Math.ceil(dataMax * 1.1 || 110),
+                  isPercentageZeroToOne
+                    ? 1.1
+                    : (dataMax: number) => Math.ceil(dataMax * 1.1 || 110),
                 ]}
                 tickFormatter={(v) => (isPercentageZeroToOne ? `${Math.round(v * 100)}%` : `${v}%`)}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
@@ -825,7 +913,9 @@ export function WidgetRenderer({
               />
               <Tooltip contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              {data.series.some((d: any) => Object.values(d).some((v) => typeof v === "number" && v < 0)) && (
+              {data.series.some((d: any) =>
+                Object.values(d).some((v) => typeof v === "number" && v < 0),
+              ) && (
                 <ReferenceLine y={0} yAxisId="left" stroke="var(--border)" strokeDasharray="3 3" />
               )}
 

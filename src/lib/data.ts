@@ -75,6 +75,8 @@ export type WidgetStyles = {
   barCategoryGap?: number;
   disableAnimations?: boolean;
   rotateLabels?: boolean;
+  /** Grouped bar mode: 'simple' = 1 bar per row (default), 'grouped' = pivot by 2nd col, 'stacked' = stacked pivot */
+  barGroupMode?: "simple" | "grouped" | "stacked";
 };
 
 export type CustomMetric = {
@@ -92,6 +94,7 @@ export type Widget = {
   dashboardId: string;
   connectionId: string | null;
   title: string;
+  description: string | null;
   chartType: ChartType;
   preset: string;
   refreshInterval: number;
@@ -382,7 +385,11 @@ export async function listWidgets(dashboardId: string): Promise<Widget[]> {
 }
 
 export async function createWidget(
-  input: Omit<Widget, "id" | "valueScale" | "alertRule" | "drilldown" | "styles"> & {
+  input: Omit<
+    Widget,
+    "id" | "valueScale" | "alertRule" | "drilldown" | "styles" | "description"
+  > & {
+    description?: string | null;
     valueScale?: number;
     alertRule?: AlertRule;
     drilldown?: DrilldownConfig;
@@ -395,6 +402,7 @@ export async function createWidget(
       dashboard_id: input.dashboardId,
       connection_id: input.connectionId,
       title: input.title,
+      description: input.description ?? null,
       chart_type: input.chartType,
       preset: input.preset || null,
       refresh_interval: input.refreshInterval,
@@ -448,6 +456,7 @@ export async function updateWidget(id: string, patch: Partial<Omit<Widget, "id" 
     .from("widgets")
     .update({
       title: patch.title,
+      description: patch.description,
       chart_type: patch.chartType,
       connection_id: patch.connectionId,
       preset: patch.preset,
@@ -476,6 +485,7 @@ function mapWidget(r: any): Widget {
     dashboardId: r.dashboard_id,
     connectionId: r.connection_id,
     title: r.title,
+    description: r.description ?? null,
     chartType: r.chart_type,
     preset: r.preset ?? "",
     refreshInterval: r.refresh_interval,
@@ -497,7 +507,11 @@ export async function createSampleDashboard(orgId: string): Promise<Dashboard> {
   );
 
   const items: Array<
-    Omit<Widget, "id" | "dashboardId" | "valueScale" | "alertRule" | "drilldown" | "styles"> & {
+    Omit<
+      Widget,
+      "id" | "dashboardId" | "valueScale" | "alertRule" | "drilldown" | "styles" | "description"
+    > & {
+      description?: string | null;
       valueScale?: number;
       alertRule?: AlertRule;
       drilldown?: DrilldownConfig;

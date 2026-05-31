@@ -48,6 +48,7 @@ type Props = {
 
 export function WidgetForm({ dashboardId, connections, onCreated, initialData }: Props) {
   const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(initialData?.description || "");
   const [presetId, setPresetId] = useState<PresetId>(
     (initialData?.preset as PresetId) || "tickets_open",
   );
@@ -138,10 +139,28 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
       const { runExplorerQuery } = await import("@/lib/explorer.functions");
       const res = await runExplorerQuery({ data: { connectionId, query: content } });
       if (res && res.length > 0) {
-        if (chartType === "table" || chartType === "composed" || chartType === "line") {
+        const isGroupedMode =
+          chartType === "bar" &&
+          styles.barGroupMode &&
+          styles.barGroupMode !== "simple" &&
+          Object.keys(res[0]).length >= 3;
+
+        if (isGroupedMode) {
+          // Modo pivot: chaves são os valores únicos da 2ª coluna (a dimensão de agrupamento)
+          const groupColKey = Object.keys(res[0])[1];
+          const uniqueGroups = Array.from(
+            new Set(
+              res.map((r) => {
+                const val = (r as Record<string, unknown>)[groupColKey];
+                return val === null || val === undefined ? "null" : String(val);
+              }),
+            ),
+          );
+          setSqlKeys(uniqueGroups);
+        } else if (chartType === "table" || chartType === "composed" || chartType === "line") {
           setSqlKeys(Object.keys(res[0]));
         } else {
-          // Para gráficos de barras ou de donut
+          // Para gráficos de barras ou de donut (modo simples)
           if (res.length === 1 && Object.keys(res[0]).length > 1) {
             setSqlKeys(Object.keys(res[0]));
           } else {
@@ -189,6 +208,7 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
     try {
       const data = {
         title: title.trim() || (chartType === "divider" ? "" : "Widget"),
+        description: description.trim() || null,
         chartType,
         connectionId: isText ? null : connectionId || null,
         preset: isText ? "" : presetId,
@@ -209,6 +229,7 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
         });
         toast.success("Widget adicionado");
         setTitle("");
+        setDescription("");
         setContent("");
       }
       onCreated?.();
@@ -346,6 +367,18 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
       {chartType !== "divider" && (
         <Field label={chartType === "markdown" ? "Título (opcional)" : "Título do widget"}>
           <input value={title} onChange={(e) => setTitle(e.target.value)} className="wf-input" />
+        </Field>
+      )}
+
+      {chartType !== "divider" && (
+        <Field label="Descrição / Informações (Filtros, regras, etc.)">
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="wf-input min-h-[60px]"
+            style={{ padding: "8px 12px", height: "auto" }}
+            placeholder="Ex.: Filtro aplicado: Entity = 1, computadores ativos nos últimos 30 dias."
+          />
         </Field>
       )}
 
@@ -521,6 +554,60 @@ export function WidgetForm({ dashboardId, connections, onCreated, initialData }:
                   </div>
                   Desativar animações (evita piscar)
                 </button>
+              </div>
+            )}
+
+            {/* Modo de Agrupamento de Barras */}
+            {chartType === "bar" && (
+              <div className="space-y-1 pt-1">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase">
+                  Modo de Exibição das Barras
+                </span>
+                <p className="text-[10px] text-muted-foreground">
+                  Use <strong>Agrupado</strong> ou <strong>Empilhado</strong> quando seu SQL
+                  retornar 3 colunas: eixo X, categoria e valor.
+                </p>
+                <div className="flex gap-2 pt-1">
+                  {(
+                    [
+                      { value: "simple", label: "Simples" },
+                      { value: "grouped", label: "Agrupado" },
+                      { value: "stacked", label: "Empilhado" },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        setStyles((s) => ({
+                          ...s,
+                          barGroupMode: s.barGroupMode === opt.value ? "simple" : opt.value,
+                        }))
+                      }
+                      className={cn(
+                        "flex-1 h-8 rounded-md border text-[11px] font-semibold transition-colors",
+                        (styles.barGroupMode || "simple") === opt.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:bg-secondary text-muted-foreground",
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Configuração de séries no modo agrupado/empilhado */}
+            {chartType === "bar" && styles.barGroupMode && styles.barGroupMode !== "simple" && (
+              <div className="space-y-1 pt-1 border-t border-border/30 mt-1">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase">
+                  Cores por Categoria
+                </span>
+                <p className="text-[10px] text-muted-foreground italic">
+                  Carregue as colunas na seção "Configuração das Séries" para personalizar cada
+                  categoria.
+                </p>
               </div>
             )}
 

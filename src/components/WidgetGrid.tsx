@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import GridLayout, { WidthProvider, type Layout } from "react-grid-layout/legacy";
 import { useNavigate } from "@tanstack/react-router";
-import { Trash2, GripVertical, Type, Pencil } from "lucide-react";
+import { Trash2, GripVertical, Type, Pencil, Info } from "lucide-react";
 import { WidgetRenderer } from "./WidgetRenderer";
 import { WidgetAlertDialog } from "./WidgetAlertDialog";
 import { WidgetDrilldownDialog } from "./WidgetDrilldownDialog";
@@ -133,11 +133,10 @@ export function WidgetGrid({
               {editable && (
                 <>
                   <div
-                    className="widget-drag-handle absolute left-0 right-0 top-0 z-10 flex h-8 cursor-move items-center justify-center gap-1 border-b border-border bg-secondary/80 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                    className="widget-drag-handle absolute left-0 right-0 top-0 z-10 flex h-8 cursor-move items-center justify-start pl-3 border-b border-border bg-secondary/80 text-xs font-medium text-muted-foreground hover:bg-secondary"
                     title="Arraste para mover"
                   >
                     <GripVertical size={14} />
-                    <span>arraste</span>
                   </div>
                   <div className="absolute right-2 top-1 z-20 flex items-center gap-1">
                     {w.chartType === "metric" && onValueScaleChange && (
@@ -190,6 +189,20 @@ export function WidgetGrid({
                           onChange={(cfg) => onDrilldownChange(w.id, cfg)}
                         />
                       )}
+                    {w.description && (
+                      <div className="relative group">
+                        <button
+                          type="button"
+                          className="grid h-6 w-6 place-items-center rounded-md bg-card text-muted-foreground shadow-sm hover:bg-secondary hover:text-foreground"
+                          aria-label="Informações do widget"
+                        >
+                          <Info size={13} />
+                        </button>
+                        <div className="absolute right-0 top-7 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity w-56 rounded-lg border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-popover">
+                          <p className="whitespace-pre-wrap font-medium">{w.description}</p>
+                        </div>
+                      </div>
+                    )}
                     {onEdit && (
                       <button
                         onClick={() => onEdit(w)}
@@ -216,6 +229,22 @@ export function WidgetGrid({
                     )}
                   </div>
                 </>
+              )}
+              {!editable && w.description && (
+                <div className="absolute right-2.5 top-2.5 z-30">
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      className="grid h-6 w-6 place-items-center rounded-md bg-card/90 text-muted-foreground shadow-sm border border-border hover:bg-secondary hover:text-foreground backdrop-blur-sm"
+                      aria-label="Informações do widget"
+                    >
+                      <Info size={13} />
+                    </button>
+                    <div className="absolute right-0 top-7 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity w-56 rounded-lg border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-popover">
+                      <p className="whitespace-pre-wrap font-medium">{w.description}</p>
+                    </div>
+                  </div>
+                </div>
               )}
               <div className={`h-full w-full overflow-hidden ${editable ? "pt-8" : ""}`}>
                 <WidgetRenderer

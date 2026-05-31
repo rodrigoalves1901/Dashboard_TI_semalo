@@ -12,8 +12,6 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Plus, LayoutDashboard, MoreHorizontal, Trash2, Sparkles, Pencil } from "lucide-react";
-import { MetricCard } from "@/components/MetricCard";
-import { mockData } from "@/lib/glpi-presets";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -106,12 +104,6 @@ function DashboardsHome() {
     }
   };
 
-  const opened = mockData("tickets_open");
-  const solved = mockData("tickets_solved");
-  const pending = mockData("tickets_pending");
-  const late = mockData("tickets_late");
-  const sla = mockData("sla_compliance");
-
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -141,17 +133,6 @@ function DashboardsHome() {
           )}
         </div>
       </header>
-
-      <section>
-        <h2 className="mb-3 text-[15px] font-bold">Métricas em destaque</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
-          <MetricCard label="Tickets em aberto" value={opened.value!} delta={opened.delta} />
-          <MetricCard label="Resolvidos (30d)" value={solved.value!} delta={solved.delta} />
-          <MetricCard label="Pendentes" value={pending.value!} delta={pending.delta} />
-          <MetricCard label="Atrasados" value={late.value!} delta={late.delta} />
-          <MetricCard label="SLA" value={sla.value!} delta={sla.delta} suffix="%" />
-        </div>
-      </section>
 
       <section>
         <div className="mb-3 flex items-center justify-between">

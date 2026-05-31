@@ -174,7 +174,6 @@ export function FullscreenDashboard({
           >
             ⛶
           </button>
-
         </header>
       )}
 

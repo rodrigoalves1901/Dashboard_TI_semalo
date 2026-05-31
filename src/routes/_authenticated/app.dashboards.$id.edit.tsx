@@ -50,6 +50,16 @@ function DashboardEditor() {
   const [gridKey, setGridKey] = useState(0);
   const hasPending = Object.keys(pending).length > 0;
 
+  const [showSidebar, setShowSidebar] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("digitaldash.showEditorSidebar") !== "false";
+  });
+
+  const toggleSidebar = (show: boolean) => {
+    setShowSidebar(show);
+    localStorage.setItem("digitaldash.showEditorSidebar", String(show));
+  };
+
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
@@ -258,17 +268,42 @@ function DashboardEditor() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <aside className="rounded-[14px] border border-border bg-card p-5 shadow-card h-fit lg:sticky lg:top-20">
-          <div className="mb-4 flex items-center gap-2">
-            <Plus size={16} className="text-primary" />
-            <h3 className="text-[15px] font-bold">Novo widget</h3>
-          </div>
-          <WidgetForm dashboardId={dashboard.id} connections={conns} />
-        </aside>
+      <div
+        className={`grid gap-6 transition-all duration-300 ${showSidebar ? "lg:grid-cols-[360px_1fr]" : "grid-cols-1"}`}
+      >
+        {showSidebar && (
+          <aside className="rounded-[14px] border border-border bg-card p-5 shadow-card h-fit lg:sticky lg:top-20 animate-in slide-in-from-left duration-200">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Plus size={16} className="text-primary" />
+                <h3 className="text-[15px] font-bold">Novo widget</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleSidebar(false)}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Ocultar painel"
+              >
+                Ocultar
+              </button>
+            </div>
+            <WidgetForm dashboardId={dashboard.id} connections={conns} />
+          </aside>
+        )}
 
         <section className="space-y-4">
-          <h3 className="text-[15px] font-bold">Widgets ({widgets.length})</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-[15px] font-bold">Widgets ({widgets.length})</h3>
+            {!showSidebar && (
+              <button
+                type="button"
+                onClick={() => toggleSidebar(true)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+              >
+                <Plus size={12} /> Adicionar widget
+              </button>
+            )}
+          </div>
           {widgets.length === 0 ? (
             <div className="flex h-40 items-center justify-center rounded-[14px] border border-dashed border-border-soft text-sm text-muted-foreground">
               Nenhum widget ainda. Use o painel ao lado para adicionar.
