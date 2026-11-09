@@ -937,6 +937,8 @@ export function WidgetRenderer({
 
                 return barKeys.map((barKey, index) => {
                   const mapping = styles.seriesMapping?.[barKey];
+                  const defaultBarColor =
+                    mapping?.color || CHART_COLORS[index % CHART_COLORS.length] || "#0d9488";
                   return (
                     <Bar
                       key={barKey}
@@ -946,6 +948,7 @@ export function WidgetRenderer({
                         mapping?.label ||
                         barKey.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
                       }
+                      fill={defaultBarColor}
                       barSize={styles.barSize}
                       radius={[4, 4, 0, 0]}
                       isAnimationActive={!styles.disableAnimations}
