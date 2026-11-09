@@ -1,7 +1,7 @@
 // RBAC data layer — roles, groups, org_users
 import { supabase } from "@/integrations/supabase/client";
 
-export const SUPER_ADMIN_EMAIL = "contato@digitalideia.com.br";
+export const SUPER_ADMIN_EMAIL = "gestaoti@semalo.com.br";
 
 // ---- Types ----
 

@@ -1,0 +1,20 @@
+services:
+  digitaldash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: digitaldash
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=https://eswqkdgqkcdegtblzrzq.supabase.co
+      - VITE_SUPABASE_ANON_KEY=sb_publishable_tg9AAH_jHwFw_s4MrGlnZg_R29tQIud
+      - EXT_SUPABASE_SERVICE_ROLE_KEY=${EXT_SUPABASE_SERVICE_ROLE_KEY}
+    networks:
+      - padrao
+
+networks:
+  padrao:
+    external: true
